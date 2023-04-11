@@ -1,0 +1,140 @@
+R1#sh run
+Building configuration...
+
+Current configuration : 1437 bytes
+!
+version 15.5
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname R1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret 5 $1$EaTc$uyYTFPkRQ3DSKgO2CZTch1
+!
+no aaa new-model
+!
+!
+!
+bsd-client server url https://cloudsso.cisco.com/as/token.oauth2
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+cts logging verbose
+!
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Ethernet0/0
+ no ip address
+!
+interface Ethernet0/0.3
+ description Gateway vlan 3
+ encapsulation dot1Q 3
+ ip address 192.168.3.1 255.255.255.0
+!
+interface Ethernet0/0.4
+ description Gateway vlan 4
+ encapsulation dot1Q 4
+ ip address 192.168.4.1 255.255.255.0
+!
+interface Ethernet0/0.8
+ description native vlan
+ encapsulation dot1Q 8
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+banner motd ^C
+Unauthorized access is strictly prohibited and prosecuted to the full extent of the law.
+^C
+!
+line con 0
+ password 7 121A0C041104
+ logging synchronous
+ login
+line aux 0
+line vty 0 4
+ password 7 14141B180F0B
+ login
+ transport input none
+!
+!
+end
