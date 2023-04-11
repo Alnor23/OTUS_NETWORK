@@ -60,9 +60,9 @@ ___
 ![PC-A](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab1_vlan/PC-A.png)
 
 # Конфигурации устройств
-- Конфигурация R1
-- Конфигурация S1
-- Конфигурация S2
+- [Конфигурация R1](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab1_vlan/config/R1)  
+- [Конфигурация S1](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab1_vlan/config/S1)  
+- [Конфигурация S2](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab1_vlan/config/S2)  
 
 
 
