@@ -27,8 +27,10 @@ ___
 - Итерфейс управления был создан соответствующей командой `interface Vlan1` 
 - Также устройствам были выданы IP - адреса в соответствии с заданием  
  #### Результаты проверки связи между устройствами
- Проверка запроса от коммутатора S1 к S2,S3  
+ Проверка связи от S1 к S2,S3  
  ![S1](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab2_stp/Screnshots/S1.png)  
- Проверка запроса от коммутатора S2 к S3  
+ _____
+ Проверка связи от S2 к S3  
  ![S2](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab2_stp/Screnshots/S2.png)  
+ _____
  ### Часть 2
