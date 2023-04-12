@@ -12,7 +12,7 @@ ___
 Были выполнена настройка основных параметров устройств (S1,S2,S3):
 - Отключен поиск DNS `no ip domain-lookup`
 - Назначено имя устройства `hostname R1`
-- - Назначен требуемый пароль на EXEC, ENABLE, консоль и линии VTY  
+- Назначен требуемый пароль на EXEC, ENABLE, консоль и линии VTY  
 `enable secret class`  
 `line console 0`  
 `password cisco`  
