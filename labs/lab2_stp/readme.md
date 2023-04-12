@@ -34,3 +34,10 @@ ___
  ![S2](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab2_stp/Screnshots/S2.png)  
  _____
  ### Часть 2
+ Для выполнения данного задания были предварительно выполнены следующие действия:  
+ - Отключены все порты на коммутаторах
+ - Все подключенные порты настроены в качестве транковых
+ - Затем включены порты e0/1 и e0/3
+ В результате выше перечисленных действий на коммутаторах вывод команды `show spanning-tree` имеет следующий вид:  
+ ![1_shstp](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab2_stp/Screnshots/1_shstp.png)
+ 
