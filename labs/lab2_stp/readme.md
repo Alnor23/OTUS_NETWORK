@@ -10,8 +10,8 @@ ___
 В соответствии с требованием задания была построена сеть:  
 ![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab2_stp/Screnshots/lab2_topology.png)  
 Были выполнена настройка основных параметров устройств (S1,S2,S3):
-- Отключен поиск DNS `no ip domain-lookup`
-- Назначено имя устройства `hostname R1`
+- Отключен поиск DNS `no ip domain-lookup`  
+- Назначено имя устройства `hostname R1`  
 - Назначен требуемый пароль на EXEC, ENABLE, консоль и линии VTY  
 `enable secret class`  
 `line console 0`  
