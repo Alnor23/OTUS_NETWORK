@@ -61,4 +61,23 @@ _____
 
 #### Шаг 4
 Настройка маршрутизацию между VLAN на R1
- 1. Активировать интерфейс от R1 к S1
+ 1. Активировать интерфейс от R1 к S1, настроить субинтерфейсы для каждой VLAN в соответствии с требованиями таблицы IP-адресации
+```
+interface Ethernet0/1
+ no ip address
+!
+interface Ethernet0/1.100
+ description gate vlan 100
+ encapsulation dot1Q 100
+ ip address 192.168.1.1 255.255.255.192
+!
+interface Ethernet0/1.200
+ description gate vlan 200
+ encapsulation dot1Q 200
+ ip address 192.168.1.65 255.255.255.224
+!
+interface Ethernet0/1.1000
+ description Native
+ encapsulation dot1Q 1000
+!
+```
