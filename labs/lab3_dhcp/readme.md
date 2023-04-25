@@ -1,6 +1,7 @@
 
 # Реализация DHCPv4, DHCPv6
 __________
+# DНСPv4
 ## Задание:
 Часть 1: Построение сети и настройка основных параметров устройства  
 Часть 2: Настройка и проверка двух серверов DHCPv4 на R1  
@@ -237,7 +238,7 @@ ip dhcp pool R2_Client_LAN
 ```
 #### Шаг 2
 Проверка конфигурации сервера DHCPv4  
-Командой `sh ip dhcp pool` можно просмотреть какие пулы адрессов раздаются на данном сервере  
+Командой `sh ip dhcp pool` можно просмотреть какие пулы адрессов раздаются на данном DHCPv4 сервере  
 ```
 R1#sh ip dhcp pool
 
@@ -261,7 +262,7 @@ Pool R2_Client_LAN :
  Current index        IP address range                    Leased addresses
  192.168.1.97         192.168.1.97     - 192.168.1.110     0
 ```
-Командой  `sh ip dhcp binding` какие адреса уже выданы сервером  
+Командой  `sh ip dhcp binding` какие адреса уже выданы DHCPv4 сервером   
 ```R1#sh ip dhcp binding
 Bindings from all pools not associated with VRF:
 IP address          Client-ID/              Lease expiration        Type
@@ -269,7 +270,7 @@ IP address          Client-ID/              Lease expiration        Type
                     User name
 192.168.1.6         0100.5079.6668.01       Apr 28 2023 07:22 AM    Automatic
 ```
-Командой  `show ip dhcp server statistics` можно посмотреть статистику по DHCPv4 серверу (такую как общее кол-во пулов, выданных адресов, кол-во завросов DORA и др.)  
+Командой  `show ip dhcp server statistics` можно посмотреть статистику по DHCPv4 серверу (такую как общее кол-во пулов, выданных адресов, кол-во запросов DORA и др.)  
 ```
 R1#show ip dhcp server statistics
 Memory usage         33634
@@ -295,5 +296,53 @@ DHCPOFFER            1
 DHCPACK              1
 DHCPNAK              0
 ```
+#### Шаг 3
+Получение адреса устройством PC-A  
+Устройство PC-A является устройство VPCS, для получения им адреса посредством DHCP необходимо сделать следующие действия  
+```
+VPCS> ip dhcp
+DDORA IP 192.168.1.6/26 GW 192.168.1.1
+```
+Как видно PC-A получил адрес из пула (в этом можно убедиться также в выводе команды `sh ip dhcp binding` непосредственно на DHCPv4 сервере в пункте выше)  
+____
+### Часть 3
+#### Шаг 1
+В данной части необходимо настроить функционал ретрансляции DHCP запросов  
+Интерфейс где это будет реализовано будет интерфейс e0/1 от R2 к S2 (так как на него будут поступать запросы от клиентов в сети), а в качестве адреса ретрансляции будет выступать адрес маршрутизатора R1
+```
+interface Ethernet0/1
+ ip address 192.168.1.97 255.255.255.240
+ ip helper-address 10.0.0.1
+```
+#### Шаг 2
+После настройки DHCP ретрансляции устройство PC-B получило адрес
+```
+VPCS> ip dhcp
+DDORA IP 192.168.1.102/28 GW 192.168.1.97
+```
+Также в этом можно убедиться на основании вывода команды `sh ip dhcp binding` на DHCPv4 сервере
+```
+R1#sh ip dhcp binding
+Bindings from all pools not associated with VRF:
+IP address          Client-ID/              Lease expiration        Type
+                    Hardware address/
+                    User name
+192.168.1.6         0100.5079.6668.01       Apr 28 2023 07:22 AM    Automatic
+192.168.1.102       0100.5079.6668.02       Apr 28 2023 07:58 AM    Automatic
+```
+______
+# DНСPv6
 
-
+#### Таблица адресации
+Device 	| Interface	| IPv6 Address
+--------|-----------|-------------
+R1	| G0/0/0	| 2001:db8:acad:2::1 /64
+R1	| G0/0/0	| fe80::1
+R1	| G0/0/1	| 2001:db8:acad:1::1/64
+R1	| G0/0/1	| fe80::1
+R2	| G0/0/0	| 2001:db8:acad:2::2/64
+R2	| G0/0/0	| fe80::2
+R2	| G0/0/1	| 2001:db8:acad:3::1 /64
+R2	| G0/0/1	| fe80::1
+PC-A	| NIC	| DHCP
+PC-B	| NIC	| DHCP
