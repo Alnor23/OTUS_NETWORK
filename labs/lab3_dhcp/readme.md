@@ -131,4 +131,65 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
   4. Зашифрованны все пароли `service password-encryption`
   5. Установлен баннер `banner motd ^C Unauthorized access is strictly prohibited and prosecuted to the full extent of the law.^C`  
 #### Шаг 7  
-Создание VLAN на S1
+Создание VLAN на S1  
+  1. На S1 были созданы VLAN согласно таблице а также настроены интерфейсы управления на S1 и S2 c указанием шлюза
+  ```
+  S1#sh vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Et0/1
+100  Clients                          active    Et0/0
+200  Management                       active
+999  Parking_Lot                      active    Et0/2, Et0/3
+1000 Native                           active
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+```
+```
+interface Vlan200
+ ip address 192.168.1.66 255.255.255.224
+!
+ip default-gateway 192.168.1.65
+```
+```
+interface Vlan1
+ ip address 192.168.1.98 255.255.255.240
+!
+ip default-gateway 192.168.1.97
+```
+  2. Также на S1 неиспользуемые порты были помещены в Vlan Parking_Lot и деактивированы, на S2 неиспользуемые порты были деактивированы  
+```
+S1#sh run | sec interf
+interface Ethernet0/0
+ switchport access vlan 100
+ switchport mode access
+ duplex auto
+interface Ethernet0/1
+ duplex auto
+interface Ethernet0/2
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ duplex auto
+interface Ethernet0/3
+ switchport access vlan 999
+ switchport mode access
+ shutdown
+ duplex auto
+```
+```
+S2#sh run | sec interf
+interface Ethernet0/0
+ duplex auto
+interface Ethernet0/1
+ duplex auto
+interface Ethernet0/2
+ shutdown
+ duplex auto
+interface Ethernet0/3
+ shutdown
+ duplex auto
+ ```
