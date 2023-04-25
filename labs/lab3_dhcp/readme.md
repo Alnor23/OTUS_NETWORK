@@ -56,8 +56,7 @@ _____
   login
   ```
   4. Зашифрованны все пароли `service password-encryption`
-  5. Установлен баннер `banner motd ^C Unauthorized access is strictly prohibited and prosecuted to the full extent of the law.^C`  
-  6. Выключены неиспользуемые порты и сохранение конфигурации
+  5. Установлен баннер `banner motd ^C Unauthorized access is strictly prohibited and prosecuted to the full extent of the law.^C` 
 
 #### Шаг 4
 Настройка маршрутизацию между VLAN на R1
@@ -116,3 +115,20 @@ Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
 ```
 #### Шаг 6 
 На данном этапе необходимо настроить основные параметры коммутаторов
+  1. Назначено имя устройства `hostname S1`  
+  2. Отключен поиск DNS `no ip domain-lookup`  
+  3. Назначен требуемый пароль на EXEC, ENABLE, консоль и линии VTY  
+  ```
+  enable secret class  
+  line console 0  
+  password cisco  
+  login  
+  exit  
+  line vty 0 4  
+  password cisco  
+  login
+  ```
+  4. Зашифрованны все пароли `service password-encryption`
+  5. Установлен баннер `banner motd ^C Unauthorized access is strictly prohibited and prosecuted to the full extent of the law.^C`  
+#### Шаг 7  
+Создание VLAN на S1
