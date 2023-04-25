@@ -331,18 +331,61 @@ IP address          Client-ID/              Lease expiration        Type
 192.168.1.102       0100.5079.6668.02       Apr 28 2023 07:58 AM    Automatic
 ```
 ______
-# DНСPv6
+# DНСPv6  
+## Задание:  
+Часть 1: Построение сети и настройка основных параметров устройства
+Часть 2: Проверка назначения адреса SLAAC из R1
+Часть 3: Настройка и проверка сервера DHCPv6 без состояния на R1
+Часть 4: Настройка и проверка сервера DHCPv6 с отслеживанием состояния на R1
+Часть 5: Настройка и проверка ретрансляции DHCPv6 на R2  
 
-#### Таблица адресации
+#### Таблица адресации  
 Device 	| Interface	| IPv6 Address
 --------|-----------|-------------
-R1	| G0/0/0	| 2001:db8:acad:2::1 /64
-R1	| G0/0/0	| fe80::1
-R1	| G0/0/1	| 2001:db8:acad:1::1/64
-R1	| G0/0/1	| fe80::1
-R2	| G0/0/0	| 2001:db8:acad:2::2/64
-R2	| G0/0/0	| fe80::2
-R2	| G0/0/1	| 2001:db8:acad:3::1 /64
-R2	| G0/0/1	| fe80::1
+R1	| e0/0	| 2001:db8:acad:2::1 /64
+R1	| e0/0	| fe80::1
+R1	| e0/1	| 2001:db8:acad:1::1/64
+R1	| e0/1	| fe80::1
+R2	| e0/0	| 2001:db8:acad:2::2/64
+R2	| e0/0	| fe80::2
+R2	| e0/1	| 2001:db8:acad:3::1 /64
+R2	| e0/1	| fe80::1
 PC-A	| NIC	| DHCP
 PC-B	| NIC	| DHCP
+____
+### Часть 1
+Данная часть была выполнена в модуле DHCPv4, в данном задании из ранее не выполненного необходимо
+  1. Включить маршрутизацию IPv6 на R1 и R2 командой `ipv6 unicast-routing`
+  2. Настроить интерфейсы маршрутизаторов с адресами IPv6 в соответствии с таблицой адресации
+```
+R1(config)#do sh run | sec int
+mmi polling-interval 60
+interface Ethernet0/0
+ description link to R2
+ ip address 10.0.0.1 255.255.255.252
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:ACAD:2::1/64
+interface Ethernet0/1
+ no ip address
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:ACAD:1::1/64
+```
+```
+R2(config)#do sh run | sec int
+mmi polling-interval 60
+interface Ethernet0/0
+ description link to R1
+ ip address 10.0.0.2 255.255.255.252
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:ACAD:2::2/64
+interface Ethernet0/1
+ ip address 192.168.1.97 255.255.255.240
+ ip helper-address 10.0.0.1
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:ACAD:3::1/64
+```
+3. Настроить маршруты по умолчанию для маршрутизаторов  
+`R1(config)#ipv6 route ::/0 2001:db8:acad:2::2`  
+`R2(config)#ipv6 route ::/0 2001:db8:acad:2::1`
+
+
