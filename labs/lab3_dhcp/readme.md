@@ -193,3 +193,107 @@ interface Ethernet0/3
  shutdown
  duplex auto
  ```
+ #### Шаг 8
+ Настройка порта S1 e0/1 подключенного к R1
+  Для корректной работы необходимо настроить этот порт как транковый установить разрешенные VLAN 100, 200, 1000, в качестве native vlan установить VLAN 1000
+  ```
+  S1#sh run int e0/1
+Building configuration...
+
+Current configuration : 138 bytes
+!
+interface Ethernet0/1
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 1000
+ switchport mode trunk
+ duplex auto
+end
+```
+______
+### Часть 2
+#### Шаг 1
+Настройка сервера DHCPv4 на R1:  
+В данном пункте необходимо настроить два сервера DHCPv4 для подсетей  192.168.1.0/26 и 192.168.1.96/28 со следующими условиями
+  1. Исключены первые пять адресов 
+  2. Для каждого пула используется уникальное имя
+  3. Указана сеть которую поддерживает этот DHCP-сервер
+  4. Доменное имя ccna-lab.com
+  5. Настроен шлюз в соответствии с подсетью
+  6. Настроить время аренды на 2 дня 12 часов 30 минут
+```
+R1#sh run | sec dhcp
+ip dhcp excluded-address 192.168.1.1 192.168.1.5
+ip dhcp excluded-address 192.168.1.97 192.168.1.101
+ip dhcp pool R1_Client_LAN
+ network 192.168.1.0 255.255.255.192
+ default-router 192.168.1.1
+ domain-name ccna-lab.com
+ lease 2 12 30
+ip dhcp pool R2_Client_LAN
+ network 192.168.1.96 255.255.255.240
+ default-router 192.168.1.97
+ domain-name ccna-lab.com
+ lease 2 12 30
+```
+#### Шаг 2
+Проверка конфигурации сервера DHCPv4  
+Командой `sh ip dhcp pool` можно просмотреть какие пулы адрессов раздаются на данном сервере  
+```
+R1#sh ip dhcp pool
+
+Pool R1_Client_LAN :
+ Utilization mark (high/low)    : 100 / 0
+ Subnet size (first/next)       : 0 / 0
+ Total addresses                : 62
+ Leased addresses               : 1
+ Pending event                  : none
+ 1 subnet is currently in the pool :
+ Current index        IP address range                    Leased addresses
+ 192.168.1.7          192.168.1.1      - 192.168.1.62      1
+
+Pool R2_Client_LAN :
+ Utilization mark (high/low)    : 100 / 0
+ Subnet size (first/next)       : 0 / 0
+ Total addresses                : 14
+ Leased addresses               : 0
+ Pending event                  : none
+ 1 subnet is currently in the pool :
+ Current index        IP address range                    Leased addresses
+ 192.168.1.97         192.168.1.97     - 192.168.1.110     0
+```
+Командой  `sh ip dhcp binding` какие адреса уже выданы сервером  
+```R1#sh ip dhcp binding
+Bindings from all pools not associated with VRF:
+IP address          Client-ID/              Lease expiration        Type
+                    Hardware address/
+                    User name
+192.168.1.6         0100.5079.6668.01       Apr 28 2023 07:22 AM    Automatic
+```
+Командой  `show ip dhcp server statistics` можно посмотреть статистику по DHCPv4 серверу (такую как общее кол-во пулов, выданных адресов, кол-во завросов DORA и др.)  
+```
+R1#show ip dhcp server statistics
+Memory usage         33634
+Address pools        2
+Database agents      0
+Automatic bindings   1
+Manual bindings      0
+Expired bindings     0
+Malformed messages   0
+Secure arp entries   0
+
+Message              Received
+BOOTREQUEST          0
+DHCPDISCOVER         2
+DHCPREQUEST          1
+DHCPDECLINE          0
+DHCPRELEASE          0
+DHCPINFORM           0
+
+Message              Sent
+BOOTREPLY            0
+DHCPOFFER            1
+DHCPACK              1
+DHCPNAK              0
+```
+
+
