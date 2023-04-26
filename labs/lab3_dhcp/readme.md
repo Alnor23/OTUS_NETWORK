@@ -384,7 +384,7 @@ interface Ethernet0/1
  ipv6 address FE80::1 link-local
  ipv6 address 2001:DB8:ACAD:3::1/64
 ```
-3. Настроить маршруты по умолчанию для маршрутизаторов  
+3. Настроить маршруты по умолчанию IPv6 для маршрутизаторов  
 `R1(config)#ipv6 route ::/0 2001:db8:acad:2::2`  
 `R2(config)#ipv6 route ::/0 2001:db8:acad:2::1`
 
