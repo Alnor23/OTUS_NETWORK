@@ -387,5 +387,90 @@ interface Ethernet0/1
 3. Настроить маршруты по умолчанию IPv6 для маршрутизаторов  
 `R1(config)#ipv6 route ::/0 2001:db8:acad:2::2`  
 `R2(config)#ipv6 route ::/0 2001:db8:acad:2::1`
+### Часть 2  
+Проверка назначения адреса SLAAC из R1  
+В данной части PC-A получил адрес используя метод SLAAC
+```
+VPCS> ip auto
+GLOBAL SCOPE      : 2001:db8:acad:1:2050:79ff:fe66:6801/64
+ROUTER LINK-LAYER : aa:bb:cc:00:50:10
+
+VPCS> sh ipv6
+
+NAME              : VPCS[1]
+LINK-LOCAL SCOPE  : fe80::250:79ff:fe66:6801/64
+GLOBAL SCOPE      : 2001:db8:acad:1:2050:79ff:fe66:6801/64
+DNS               :
+ROUTER LINK-LAYER : aa:bb:cc:00:50:10
+MAC               : 00:50:79:66:68:01
+LPORT             : 20000
+RHOST:PORT        : 127.0.0.1:30000
+MTU:              : 1500
+```
+### Часть 3 
+Настройка и проверка сервера DHCPv6 на R1  
+В данной части необходимо настроить на маршрутизаторе R1 DHCPv6 сервер без сохранения состояний
+```
+R1#sh run int e0/1
+Building configuration...
+
+Current configuration : 171 bytes
+!
+interface Ethernet0/1
+ no ip address
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:ACAD:1::1/64
+ ipv6 nd other-config-flag
+ ipv6 dhcp server R1-STATELESS
+end
+
+R1#sh run | sec ipv6 dhcp
+ipv6 dhcp pool R1-STATELESS
+ dns-server 2001:DB8:ACAD::254
+ domain-name STATELESS.com
+ ipv6 dhcp server R1-STATELESS
+ ```
+### Часть 4  
+Настройка и проверка сервера DHCPv6 на R1
+В данной части необходимо настроить на маршрутизаторе R3 DHCPv6 сервер c сохранением состояний, а также ретрансляцию DHCPv6 
+```
+R1#sh run | sec ipv6 dhcp
+ipv6 dhcp pool R1-STATELESS
+ dns-server 2001:DB8:ACAD::254
+ domain-name STATELESS.com
+ipv6 dhcp pool R2-STATEFUL
+ address prefix 2001:DB8:ACAD:3:AAA::/80
+ dns-server 2001:DB8:ACAD::254
+ domain-name STATEFUL.com
+ ipv6 dhcp server R2-STATEFUL
+ ipv6 dhcp server R1-STATELESS
+R1#sh run int e0/0
+Building configuration...
+
+Current configuration : 189 bytes
+!
+interface Ethernet0/0
+ description link to R2
+ ip address 10.0.0.1 255.255.255.252
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:ACAD:2::1/64
+ ipv6 dhcp server R2-STATEFUL
+end
+```
+```
+R2#sh run int e0/1
+Building configuration...
+
+Current configuration : 256 bytes
+!
+interface Ethernet0/1
+ ip address 192.168.1.97 255.255.255.240
+ ip helper-address 10.0.0.1
+ ipv6 address FE80::1 link-local
+ ipv6 address 2001:DB8:ACAD:3::1/64
+ ipv6 nd managed-config-flag
+ ipv6 dhcp relay destination 2001:DB8:ACAD:2::1 Ethernet0/0
+end
+```
 
 
