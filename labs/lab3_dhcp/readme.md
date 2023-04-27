@@ -474,3 +474,7 @@ end
 ```
 ____
 # Конфигурации устройств
+- [Конфигурация S1](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab3_dhcp/config/S1)  
+- [Конфигурация S2](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab3_dhcp/config/S2)  
+- [Конфигурация R1](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab3_dhcp/config/R1) 
+- [Конфигурация R2](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab3_dhcp/config/R2)
