@@ -472,5 +472,5 @@ interface Ethernet0/1
  ipv6 dhcp relay destination 2001:DB8:ACAD:2::1 Ethernet0/0
 end
 ```
-
-
+____
+# Конфигурации устройств
