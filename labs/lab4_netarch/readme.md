@@ -7,5 +7,5 @@ ______
 4. Настроите VLAN/Loopbackup interface управления для сетевых устройств.  
 5. Настроите сети офисов так, чтобы не возникало broadcast штормов, а использование линков было максимально оптимизировано
 Используете IPv4. IPv6 по желанию.  
-### Лабораторный стэнд
+### Лабораторный стенд
   ![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab4_netarch/screenshorts/main_scheme.png)
