@@ -12,6 +12,7 @@ ______
 ______
   Для формирования адресного пространства стенда были использованны следующие подходы:
    - все адреса IPv4 относятся к сети 10.0.0.0/8
+   - иммитация глобальных адресов сеть 50.50.0.0/16
    - все глобальные адреса IPv6 относятся к сети 20FF:0DB8:ACAD::/48
    - все локальные адреса IPv6 относятся к сети FE80::/8
   
@@ -241,4 +242,50 @@ R21    |e0/0  |IPv6          |20FF:0DB8:ACAD:7010::21:/64   |20FF:0DB8:ACAD:7010
 ||||
 R15    |e0/2  |IPv4          |50.50.1.38/30                 |50.50.1.36/30
 R15    |e0/2  |IPv6          |20FF:0DB8:ACAD:7010::15:2/64  |20FF:0DB8:ACAD:7010::/64
+
+### Часть 2. Настройка маршрутизаторов.
+В этой части были настроены все маршрутизаторы лабораторного стенда
+Пример настройки маршрутизатора R14
+```
+hostname R14
+ip routing
+ipv6 unicast-routing
+
+interface Loopback1
+ description manage
+ ip address 10.1.1.3 255.255.255.240
+ ipv6 address FE80::14 link-local
+ ipv6 address 20FF:DB8:ACAD:1001::14/64
+ ipv6 enable
+!
+interface Ethernet0/0
+ description to R12
+ ip address 10.1.2.9 255.255.255.252
+ ipv6 address FE80::14 link-local
+ ipv6 address 20FF:DB8:ACAD:1011::14:0/64
+ ipv6 enable
+!
+interface Ethernet0/1
+ description to R13
+ ip address 10.1.2.13 255.255.255.252
+ ipv6 address FE80::14 link-local
+ ipv6 address 20FF:DB8:ACAD:1012::14:1/64
+ ipv6 enable
+!
+interface Ethernet0/2
+ description to R22
+ ip address 50.50.1.38 255.255.255.252
+ ipv6 address FE80::14 link-local
+ ipv6 address 20FF:DB8:ACAD:7008::14:2/64
+ ipv6 enable
+!
+interface Ethernet0/3
+ description to R19
+ ip address 10.1.2.2 255.255.255.252
+ ipv6 address FE80::14 link-local
+ ipv6 address 20FF:DB8:ACAD:1000::14:3/64
+ ipv6 enable
+!
+```
+
 
