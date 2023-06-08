@@ -287,5 +287,5 @@ interface Ethernet0/3
  ipv6 enable
 !
 ```
-
+### Часть 3. Настройка VLAN, InterVLAN routing, VPC.
 
