@@ -8,8 +8,7 @@ ______
 5. Настроите сети офисов так, чтобы не возникало broadcast штормов, а использование линков было максимально оптимизировано
 Используете IPv4. IPv6 по желанию.  
 ### Лабораторный стенд
-  ![scheme](https://github.com/Alnor23/
-  TUS_NETWORK/blob/main/labs/lab4_netarch/screenshorts/main_scheme.png)
+  ![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab4_netarch/screenshorts/main_scheme.png)
 ______
   Для формирования адресного пространства стенда были использованны следующие подходы:
    - все адреса IPv4 относятся к сети 10.0.0.0/8
