@@ -288,4 +288,14 @@ interface Ethernet0/3
 !
 ```
 ### Часть 3. Настройка VLAN, InterVLAN routing, VPC.
+Таблица VLAN
+
+Device | VLAN | Address      | Network                      | Coment
+------ |------|--------------|------------------------------|---------
+R28    |30    |10.3.1.9      |10.3.1.0/29                   |Gateway vlan 30
+R28    |31    |10.3.3.1      |10.3.3.0/28                   |Gateway vlan 31
+R28    |32    |10.3.3.17     |10.3.3.16/28                  |Gateway vlan 32
+SW29   |30    |10.3.1.10     |10.3.1.0/29                   |Manage SW29
+VPC30  |31    |10.3.3.2      |10.3.3.0/28                   |Address VPC30
+VPC31  |32    |10.3.3.18     |10.3.3.16/28                  |Address VPC31
 
