@@ -289,7 +289,37 @@ interface Ethernet0/3
 ```
 ### Часть 3. Настройка VLAN, InterVLAN routing, VPC.
 Таблица VLAN
+#### МСК  
+Device | VLAN | Address      | Network                      | Comment
+------ |------|--------------|------------------------------|---------
+R12    |10    |10.1.1.17     |10.1.1.16/29                  |Gateway vlan 10
+R12    |11    |10.1.3.1      |10.1.3.0/28                   |Gateway vlan 11
+R12    |12    |10.1.3.17     |10.1.3.16/28                  |Gateway vlan 12
+R13    |10    |10.1.1.17     |10.1.1.16/29                  |Gateway vlan 10
+R13    |11    |10.1.3.1      |10.1.3.0/28                   |Gateway vlan 11
+R13    |12    |10.1.3.17     |10.1.3.16/28                  |Gateway vlan 12
+SW4    |10    |10.1.1.18     |10.1.1.16/29                  |Manage SW4
+SW5    |10    |10.1.1.19     |10.1.1.16/29                  |Manage SW5
+SW2    |10    |10.1.1.20     |10.1.1.16/29                  |Manage SW2
+SW3    |10    |10.1.1.21     |10.1.1.16/29                  |Manage SW3
+VPC1   |11    |10.1.3.2      |10.1.3.0/28                   |Address VPC1
+VPC7   |12    |10.1.3.18     |10.1.3.16/28                  |Address VPC7
 
+#### СПБ
+Device | VLAN | Address      | Network                      | Comment
+------ |------|--------------|------------------------------|---------
+R17    |20    |10.2.1.17     |10.2.1.16/29                  |Gateway vlan 20
+R17    |21    |10.2.3.1      |10.2.3.0/28                   |Gateway vlan 21
+R17    |22    |10.2.3.17     |10.2.3.16/28                  |Gateway vlan 22
+R16    |20    |10.2.1.17     |10.2.1.16/29                  |Gateway vlan 20
+R16    |21    |10.2.3.1      |10.2.3.0/28                   |Gateway vlan 21
+R16    |22    |10.2.3.17     |10.2.3.16/28                  |Gateway vlan 22
+SW9    |20    |10.2.1.18     |10.2.1.16/29                  |Manage SW9
+SW10   |20    |10.2.1.19     |10.2.1.16/29                  |Manage SW10
+VPC8   |21    |10.2.3.2      |10.2.3.0/28                   |Address VPC8
+VPC    |22    |10.2.3.18     |10.2.3.16/28                  |Address VPC
+
+#### Чокурдах  
 Device | VLAN | Address      | Network                      | Comment
 ------ |------|--------------|------------------------------|---------
 R28    |30    |10.3.1.9      |10.3.1.0/29                   |Gateway vlan 30
@@ -299,3 +329,27 @@ SW29   |30    |10.3.1.10     |10.3.1.0/29                   |Manage SW29
 VPC30  |31    |10.3.3.2      |10.3.3.0/28                   |Address VPC30
 VPC31  |32    |10.3.3.18     |10.3.3.16/28                  |Address VPC31
 
+Для настройки VLAN, InterVLAN routing было выполнено следующее:
+- Сконфигурированы коммутаторы в соответствии с таблицами
+- Настроены саб интерфейсы на маршрутизаторах
+Пример настройки интерфейса маршрутизатора R28
+```
+interface Ethernet0/2
+ no ip address
+!
+interface Ethernet0/2.30
+ description gate vlan30
+ encapsulation dot1Q 30
+ ip address 10.3.1.9 255.255.255.248
+!
+interface Ethernet0/2.31
+ description gate vlan31
+ encapsulation dot1Q 31
+ ip address 10.3.3.1 255.255.255.240
+!
+interface Ethernet0/2.32
+ description gate vlan32
+ encapsulation dot1Q 32
+ ip address 10.3.3.17 255.255.255.240
+ ```
+ 
