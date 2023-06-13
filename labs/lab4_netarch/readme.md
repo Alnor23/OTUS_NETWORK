@@ -294,9 +294,6 @@ Device | VLAN | Address      | Network                      | Comment
 ------ |------|--------------|------------------------------|---------
 R12    |10    |10.1.1.17     |10.1.1.16/29                  |Gateway vlan 10
 R12    |11    |10.1.3.1      |10.1.3.0/28                   |Gateway vlan 11
-R12    |12    |10.1.3.17     |10.1.3.16/28                  |Gateway vlan 12
-R13    |10    |10.1.1.17     |10.1.1.16/29                  |Gateway vlan 10
-R13    |11    |10.1.3.1      |10.1.3.0/28                   |Gateway vlan 11
 R13    |12    |10.1.3.17     |10.1.3.16/28                  |Gateway vlan 12
 SW4    |10    |10.1.1.18     |10.1.1.16/29                  |Manage SW4
 SW5    |10    |10.1.1.19     |10.1.1.16/29                  |Manage SW5
@@ -310,9 +307,6 @@ Device | VLAN | Address      | Network                      | Comment
 ------ |------|--------------|------------------------------|---------
 R17    |20    |10.2.1.17     |10.2.1.16/29                  |Gateway vlan 20
 R17    |21    |10.2.3.1      |10.2.3.0/28                   |Gateway vlan 21
-R17    |22    |10.2.3.17     |10.2.3.16/28                  |Gateway vlan 22
-R16    |20    |10.2.1.17     |10.2.1.16/29                  |Gateway vlan 20
-R16    |21    |10.2.3.1      |10.2.3.0/28                   |Gateway vlan 21
 R16    |22    |10.2.3.17     |10.2.3.16/28                  |Gateway vlan 22
 SW9    |20    |10.2.1.18     |10.2.1.16/29                  |Manage SW9
 SW10   |20    |10.2.1.19     |10.2.1.16/29                  |Manage SW10
@@ -353,12 +347,62 @@ interface Ethernet0/2.32
  encapsulation dot1Q 32
  ip address 10.3.3.17 255.255.255.240
  ```
- ### Часть 4. Настроите сети офисов так, чтобы не возникало broadcast штормов, а использование линков было максимально оптимизировано  
-  1. Оптимизация линков.  
-    В офисе Москва были убраны линки между R12 и SW5, и между R13 и SW4  
-    В офисе СПБ были убраны линки между R17 и SW10, R16 и SW9  
-   В обоих офисах доступность коммутаторами обоих маршрутизаторов обеспечивается за счет связи каждого с одним и связью между ними, так же был настроен VRRP.
-   Также между коммутаторами был настроен LACP.  
-   Итоговая схема:  
-   ![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab4_netarch/screenshorts/red_scheme.png)
+ Также были настроенны коммутаторы согласно таблиц
+ Пример настройки коммутатора SW9
+ ```
+ interface Port-channel1
+ switchport
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet0/0
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ duplex auto
+ channel-group 1 mode on
+!
+interface Ethernet0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ duplex auto
+ channel-group 1 mode on
+!
+interface Ethernet0/2
+ switchport access vlan 21
+ switchport mode access
+ duplex auto
+!
+interface Ethernet0/3
+ description to R17
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ duplex auto
+!
+interface Ethernet1/0
+ duplex auto
+!
+interface Ethernet1/1
+ duplex auto
+!
+interface Ethernet1/2
+ duplex auto
+!
+interface Ethernet1/3
+ duplex auto
+!
+interface Vlan20
+ ip address 10.2.1.18 255.255.255.248
+!
+ip default-gateway 10.2.1.17
+!
+```
+Согласно схемы была также настроена агрегация каналов (LACP)
+
+ ### Часть 4. Настроите сети офисов так, чтобы не возникало broadcast штормов, а использование линков было максимально оптимизировано 
+  В офисе Москва был настроен STP между 4 коммутаторами SW2, SW3, SW4, SW5 таким образом чтобы линки SW4 - SW2 и SW5 - SW3 были альтернативные заблокированные.
+  
+  _______
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab4_netarch/config)
+  
+  
    
