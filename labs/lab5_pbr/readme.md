@@ -6,5 +6,5 @@ ______
 3. Настроите отслеживание линка через технологию IP SLA.(только для IPv4)  
 4. Настройте для офиса Лабытнанги маршрут по-умолчанию.  
 ### Схема  
-![scheme]()  
+![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab5_pbr/screenshots/scheme.png)  
 ______  
