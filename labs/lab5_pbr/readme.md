@@ -13,7 +13,7 @@ ______
 ### Часть 2. Распределите трафик между двумя линками с провайдером. 
 В данном пункте предпологается что трафик от VPC30 будет направлен к R26, а трафик от VPC31 к R25.  
 Для реализации данной задачи необходимо произвести следующие настройки на маршрутизаторе R28:
-Создаем ACL соответстввенно сетям VLAN VPC
+1. Создаем ACL соответстввенно сетям VLAN VPC
 ```
 R28(config)#do sh access-lists
 Standard IP access list VLAN_31
@@ -21,4 +21,19 @@ Standard IP access list VLAN_31
 Standard IP access list VLAN_32
     10 permit 10.3.3.16, wildcard bits 0.0.0.15
 ```
-
+2. Настраиваем PBR соответственно условию
+```
+R28#sh route-map
+route-map PBR, permit, sequence 10
+  Match clauses:
+    ip address (access-lists): VLAN_31
+  Set clauses:
+    ip next-hop 50.50.1.17
+  Policy routing matches: 0 packets, 0 bytes
+route-map PBR, permit, sequence 20
+  Match clauses:
+    ip address (access-lists): VLAN_32
+  Set clauses:
+    ip next-hop 50.50.1.21
+  Policy routing matches: 0 packets, 0 bytes
+```
