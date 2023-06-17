@@ -126,4 +126,5 @@ L        10.3.1.3/32 is directly connected, Loopback1
 C        50.50.1.24/30 is directly connected, Ethernet0/0
 L        50.50.1.26/32 is directly connected, Ethernet0/0
 ```
-
+_______
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab5_pbr/configs)
