@@ -42,7 +42,7 @@ route-map PBR, permit, sequence 20
     ip next-hop 50.50.1.21
   Policy routing matches: 0 packets, 0 bytes
 ```
-3. Применяем созданный route map к интерфейсу направленному на VPC30 и VPC31tr
+3. Применяем созданный route map к интерфейсу направленному на VPC30 и VPC31
 ```
 interface Ethernet0/2
  no ip address
