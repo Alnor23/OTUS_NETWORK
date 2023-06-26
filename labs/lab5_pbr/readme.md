@@ -75,6 +75,23 @@ interface Ethernet0/2.32
 ip policy route-map PBR
 !
 ```
+4. Для проверки выполним трассировку с VPC30 и VPC31:
+VPC30:
+```
+VPCS> trace 10.10.2.5
+trace to 10.10.2.5, 8 hops max, press Ctrl+C to stop
+ 1   10.3.3.1   2.072 ms  2.690 ms  2.115 ms
+ 2   50.50.1.17   1.521 ms  0.988 ms  1.135 ms
+ 3   *10.10.2.5   1.385 ms (ICMP type:3, code:3, Destination port unreachable)  *
+```
+VPC31
+```
+VPCS> trace  10.10.2.6
+trace to 10.10.2.6, 8 hops max, press Ctrl+C to stop
+ 1   10.3.3.17   0.519 ms  0.482 ms  0.615 ms
+ 2   50.50.1.21   3.047 ms  2.608 ms  2.841 ms
+ 3   *10.10.2.6   2.563 ms (ICMP type:3, code:3, Destination port unreachable)
+```
 ### Часть 3. Настройте отслеживание линка через технологию IP SLA. 
 Для выполнения этого задания был выбран линк между R28 и R26.
 Настройка отслеживания:
