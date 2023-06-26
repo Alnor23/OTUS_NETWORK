@@ -6,7 +6,7 @@ ______
 3. Настройте отслеживание линка через технологию IP SLA.(только для IPv4)  
 4. Настройте для офиса Лабытнанги маршрут по-умолчанию.  
 ### Схема  
-![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab5_pbr/screenshots/scheme.png)  
+![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab5_pbr/screenshots/scheme.png.png)  
 ______  
 ### Часть 1. Настройте политику маршрутизации для сетей офиса.   
 Политика маршрутизации была настроена в виде маршрутов по умолчанию от R28 к R25, R26 с разной административной дистанцией.  
