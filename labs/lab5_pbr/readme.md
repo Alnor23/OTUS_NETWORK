@@ -74,7 +74,7 @@ interface Ethernet0/2.32
 ip policy route-map PBR
 !
 ```
-4. Для проверки выполним трассировку с VPC30 и VPC31:  
+4. Для проверки выполним трассировку с VPC30 и VPC31:
 VPC30:
 ```
 VPCS> trace 10.10.2.5
