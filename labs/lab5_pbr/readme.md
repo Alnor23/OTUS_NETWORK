@@ -100,6 +100,16 @@ ip sla 1
  icmp-echo 50.50.1.17 source-ip 50.50.1.18
 ip sla schedule 1 life forever start-time now
 ```
+Создаем обьект отслеживания:
+```
+track 1 ip sla 1 reachability
+ delay down 10 up 10
+```
+И вешаем его на маршрут по умолчанию:
+```
+ip route 0.0.0.0 0.0.0.0 50.50.1.17 20
+ip route 0.0.0.0 0.0.0.0 50.50.1.21 21
+```
 Cтатистика SLA:
 ```
 R28#sh ip sla statistics
