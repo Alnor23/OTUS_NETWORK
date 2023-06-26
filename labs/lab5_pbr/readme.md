@@ -15,13 +15,16 @@ R28(config)#do sh run | i ip route
 ip route 0.0.0.0 0.0.0.0 50.50.1.17 20
 ip route 0.0.0.0 0.0.0.0 50.50.1.21 21
 ```
-Также были настроены обратные маршруты от марщрутизаторов R26 и R25 соответственно:
+Также были настроены обратные маршруты от марщрутизаторов R26 и R25 соответственно, и настроена связь между ними
 ```
-R26(config)#ip route 0.0.0.0 0.0.0.0 50.50.1.18
+R26(config)#ip route 0.0.0.0 0.0.0.0 50.50.1.18 20
+R26(config)#ip route 0.0.0.0 0.0.0.0 10.10.2.5 21
 ```
 ```
-R25(config)#ip route 0.0.0.0 0.0.0.0 50.50.1.22
+R25(config)#ip route 0.0.0.0 0.0.0.0 50.50.1.22 20
+R25(config)#ip route 0.0.0.0 0.0.0.0 10.10.2.6 21
 ```
+И настроена связь между ними
 ### Часть 2. Распределите трафик между двумя линками с провайдером. 
 В данном пункте предпологается что трафик от VPC30 будет направлен к R26, а трафик от VPC31 к R25.  
 Для реализации данной задачи необходимо произвести следующие настройки на маршрутизаторе R28:
@@ -49,11 +52,10 @@ route-map PBR, permit, sequence 20
     ip next-hop 50.50.1.21
   Policy routing matches: 0 packets, 0 bytes
 ```
-3. Применяем созданный route map к интерфейсу направленному на VPC30 и VPC31
+3. Применяем созданный route map к саб интерфейсу направленному на VPC30 и VPC31
 ```
 interface Ethernet0/2
  no ip address
- ip policy route-map PBR
 !
 interface Ethernet0/2.30
  description gate vlan30
@@ -64,11 +66,13 @@ interface Ethernet0/2.31
  description gate vlan31
  encapsulation dot1Q 31
  ip address 10.3.3.1 255.255.255.240
+ip policy route-map PBR
 !
 interface Ethernet0/2.32
  description gate vlan32
  encapsulation dot1Q 32
  ip address 10.3.3.17 255.255.255.240
+ip policy route-map PBR
 !
 ```
 ### Часть 3. Настройте отслеживание линка через технологию IP SLA. 
