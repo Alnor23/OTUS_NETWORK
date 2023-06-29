@@ -80,8 +80,56 @@ _________
 ### Часть 2. Маршрутизаторы R12-R13 находятся в зоне 10. Дополнительно к маршрутам должны получать маршрут по умолчанию.
 В этой чассти в дополнение к стандартным настройкам из предыдущей части. Необходимо также настроить зону 10 вида stub для выполнения условий задания.  
   1. Создаем зону 10 типа stub командой `area 10 stub` на устройствах R14, R15, R12, R13.  
-  2. Включаем на соответствующих интерфейсах маршрутизаторов `ip ospf 1 area 0`.  
-  
+  2. Включаем на соответствующих интерфейсах маршрутизаторов `ip ospf 1 area 0`.
+     Для проверки используем команду `show ip route ospf` на маршрутизаторе R12:
+ ```
+     R12#sh ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 10.1.2.18 to network 0.0.0.0
+
+O*IA  0.0.0.0/0 [110/11] via 10.1.2.18, 00:09:19, Ethernet0/3
+                [110/11] via 10.1.2.9, 00:09:19, Ethernet0/2
+      10.0.0.0/8 is variably subnetted, 15 subnets, 4 masks
+O        10.1.2.12/30 [110/20] via 10.1.2.38, 00:08:36, Ethernet0/1
+                      [110/20] via 10.1.2.9, 00:09:19, Ethernet0/2
+O        10.1.2.24/30 [110/20] via 10.1.2.38, 00:08:36, Ethernet0/1
+                      [110/20] via 10.1.2.18, 00:09:19, Ethernet0/3
+O IA     10.1.2.32/30 [110/20] via 10.1.2.18, 00:09:19, Ethernet0/3
+                      [110/20] via 10.1.2.9, 00:09:19, Ethernet0/2
+```
+Из вывода команды мы видим что маршрутизатор получает маршруты и маршрут по умолчанию посредством OSPF (аналогично на R13).  
+### Часть 3. Маршрутизатор R19 находится в зоне 101 и получает только маршрут по умолчанию.  
+Также производим стандартные настройки устройства R19, и определяем 101 зону типа totally stub на маршрутизаторах R19,R14:
+  1. Создаем зону 101 типа totally stub на маршрутизаторах R19,R14 командой `area 101 stub no-summary`.
+  2. Включаем на соответствующих интерфейсах маршрутизаторов `ip ospf 1 area 101`.
+    Для проверки используем команду `show ip route ospf` на маршрутизаторе R19: 
+```
+R19(config-if)#do sh ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 10.1.2.2 to network 0.0.0.0
+
+O*IA  0.0.0.0/0 [110/11] via 10.1.2.2, 00:00:14, Ethernet0/0
+R19(config-if)#
+```
+Из вывода команды мы видим что маршрутизатор получает только маршрут по умолчанию посредством OSPF.  
      
      
 
