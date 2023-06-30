@@ -153,5 +153,5 @@ router ospfv3 1
 ipv6 ospf 1 area 0
 ```
 _______
-  - [Конфигурации устройств]()
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab6_ospf/config)
 
