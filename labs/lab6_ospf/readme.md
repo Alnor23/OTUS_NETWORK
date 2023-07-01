@@ -181,7 +181,7 @@ ip prefix-list area101 seq 10 permit 0.0.0.0/0
 ipv6 prefix-list area101v6 seq 5 deny 20FF:DB8:ACAD:1000::/64
 ipv6 prefix-list area101v6 seq 10 permit ::/0
 ```
-  3. Применяем созданные prefix-list к зоне 102:
+  3. Применяем созданные prefix-list к зоне 102:  
 IPv4  
 ```
 area 102 filter-list prefix area101 in
