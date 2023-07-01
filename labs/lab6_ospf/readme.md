@@ -81,7 +81,7 @@ _________
 В этой чассти в дополнение к стандартным настройкам из предыдущей части. Необходимо также настроить зону 10 вида stub для выполнения условий задания.  
   1. Создаем зону 10 типа stub командой `area 10 stub` на устройствах R14, R15, R12, R13.  
   2. Включаем на соответствующих интерфейсах маршрутизаторов `ip ospf 1 area 0`.
-     Для проверки используем команду `show ip route ospf` на маршрутизаторе R12:
+     Для проверки используем команду `show ip route ospf`  на маршрутизаторе R12:
  ```
      R12#sh ip route ospf
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
@@ -106,6 +106,35 @@ O        10.1.2.24/30 [110/20] via 10.1.2.38, 00:08:36, Ethernet0/1
 O IA     10.1.2.32/30 [110/20] via 10.1.2.18, 00:09:19, Ethernet0/3
                       [110/20] via 10.1.2.9, 00:09:19, Ethernet0/2
 ```
+Для проверки работы OSPFv3 воспользуемся командой `show ipv6 route ospf`  на маршрутизаторе R12:
+```
+R12#sh ipv6 route ospf
+IPv6 Routing Table - default - 15 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, la - LISP alt
+       lr - LISP site-registrations, ld - LISP dyn-eid, a - Application
+OI  ::/0 [110/11]
+     via FE80::15, Ethernet0/3
+     via FE80::14, Ethernet0/2
+OI  20FF:DB8:ACAD:1000::/64 [110/20]
+     via FE80::14, Ethernet0/2
+O   20FF:DB8:ACAD:1012::/64 [110/20]
+     via FE80::13, Ethernet0/1
+     via FE80::14, Ethernet0/2
+O   20FF:DB8:ACAD:1014::/64 [110/20]
+     via FE80::13, Ethernet0/1
+     via FE80::15, Ethernet0/3
+OI  20FF:DB8:ACAD:1015::/64 [110/20]
+     via FE80::15, Ethernet0/3
+OI  20FF:DB8:ACAD:1016::/64 [110/20]
+     via FE80::15, Ethernet0/3
+     via FE80::14, Ethernet0/2
+```
 Из вывода команды мы видим что маршрутизатор получает маршруты и маршрут по умолчанию посредством OSPF (аналогично на R13).  
 ### Часть 3. Маршрутизатор R19 находится в зоне 101 и получает только маршрут по умолчанию.  
 Также производим стандартные настройки устройства R19, и определяем 101 зону типа totally stub на маршрутизаторах R19,R14:
@@ -129,18 +158,42 @@ Gateway of last resort is 10.1.2.2 to network 0.0.0.0
 O*IA  0.0.0.0/0 [110/11] via 10.1.2.2, 00:00:14, Ethernet0/0
 R19(config-if)#
 ```
+Для проверки работы OSPFv3 воспользуемся командой `show ipv6 route ospf`  на маршрутизаторе R19:
+```
+R19#sh ipv6 route ospf
+IPv6 Routing Table - default - 6 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, la - LISP alt
+       lr - LISP site-registrations, ld - LISP dyn-eid, a - Application
+OI  ::/0 [110/11]
+     via FE80::14, Ethernet0/0
+```
 Из вывода команды мы видим что маршрутизатор получает только маршрут по умолчанию посредством OSPF.  
 
 ### Часть 4. Маршрутизатор R20 находится в зоне 102 и получает все маршруты, кроме маршрутов до сетей зоны 101.
 В этом задание необходимо настроить фильтрацию маршрутов для зоны 102 (ее тип будет normal area) в соответствии с заданием:
   1. Включаем на соответствующих интерфейсах маршрутизаторов R15 и R20 `ip ospf 1 area 102`.
-  2. Создаем prefix-list согласно условию.
+  2. Создаем prefix-list`ы для IPv4 и IPv6 согласно условию.
 ```
 R20#sh run | i pre
 ip prefix-list area101 seq 5 deny 10.1.2.0/30
 ip prefix-list area101 seq 10 permit 0.0.0.0/0
+ipv6 prefix-list area101v6 seq 5 deny 20FF:DB8:ACAD:1000::/64
+ipv6 prefix-list area101v6 seq 10 permit ::/0
 ```
-  3. Применяем созданный prefix-list к зоне 102 `area 102 filter-list prefix area101 in`.
+  3. Применяем созданные prefix-list к зоне 102:
+IPv4 `area 102 filter-list prefix area101 in`
+IPv6 
+```
+address-family ipv6 unicast
+  area 102 filter-list prefix area101v6 in
+ exit-address-family
+```
 ### Часть 5. Настройка для IPv6 повторяет логику IPv4.
 Настройка для IPv6 была произведена на всех устройствах данной лабораторной работы в логике работы IPv4  
 Пример R15
