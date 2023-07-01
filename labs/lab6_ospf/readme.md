@@ -82,8 +82,8 @@ _________
   1. Создаем зону 10 типа stub командой `area 10 stub` на устройствах R14, R15, R12, R13.  
   2. Включаем на соответствующих интерфейсах маршрутизаторов `ip ospf 1 area 0`.
      Для проверки используем команду `show ip route ospf`  на маршрутизаторе R12:
- ```
-     R12#sh ip route ospf
+```
+R12#sh ip route ospf
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
        D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
        N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
@@ -96,18 +96,17 @@ Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
 
 Gateway of last resort is 10.1.2.18 to network 0.0.0.0
 
-O*IA  0.0.0.0/0 [110/11] via 10.1.2.18, 00:09:19, Ethernet0/3
-                [110/11] via 10.1.2.9, 00:09:19, Ethernet0/2
-      10.0.0.0/8 is variably subnetted, 15 subnets, 4 masks
-O        10.1.2.12/30 [110/20] via 10.1.2.38, 00:08:36, Ethernet0/1
-                      [110/20] via 10.1.2.9, 00:09:19, Ethernet0/2
-O        10.1.2.24/30 [110/20] via 10.1.2.38, 00:08:36, Ethernet0/1
-                      [110/20] via 10.1.2.18, 00:09:19, Ethernet0/3
-O IA     10.1.2.32/30 [110/20] via 10.1.2.18, 00:09:19, Ethernet0/3
-                      [110/20] via 10.1.2.9, 00:09:19, Ethernet0/2
-```
-Для проверки работы OSPFv3 воспользуемся командой `show ipv6 route ospf`  на маршрутизаторе R12:
-```
+O*IA  0.0.0.0/0 [110/11] via 10.1.2.18, 00:14:16, Ethernet0/3
+                [110/11] via 10.1.2.9, 00:20:07, Ethernet0/2
+      10.0.0.0/8 is variably subnetted, 17 subnets, 4 masks
+O IA     10.1.2.0/30 [110/20] via 10.1.2.9, 00:20:07, Ethernet0/2
+O        10.1.2.12/30 [110/20] via 10.1.2.38, 00:07:20, Ethernet0/1
+                      [110/20] via 10.1.2.9, 00:07:30, Ethernet0/2
+O        10.1.2.24/30 [110/20] via 10.1.2.38, 00:07:20, Ethernet0/1
+                      [110/20] via 10.1.2.18, 00:07:30, Ethernet0/3
+O IA     10.1.2.28/30 [110/20] via 10.1.2.18, 00:14:19, Ethernet0/3
+O IA     10.1.2.32/30 [110/20] via 10.1.2.18, 00:14:16, Ethernet0/3
+
 R12#sh ipv6 route ospf
 IPv6 Routing Table - default - 15 entries
 Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
@@ -119,21 +118,21 @@ Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
        ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, la - LISP alt
        lr - LISP site-registrations, ld - LISP dyn-eid, a - Application
 OI  ::/0 [110/11]
-     via FE80::15, Ethernet0/3
      via FE80::14, Ethernet0/2
+     via FE80::15, Ethernet0/3
 OI  20FF:DB8:ACAD:1000::/64 [110/20]
      via FE80::14, Ethernet0/2
 O   20FF:DB8:ACAD:1012::/64 [110/20]
      via FE80::13, Ethernet0/1
      via FE80::14, Ethernet0/2
 O   20FF:DB8:ACAD:1014::/64 [110/20]
-     via FE80::13, Ethernet0/1
      via FE80::15, Ethernet0/3
+     via FE80::13, Ethernet0/1
 OI  20FF:DB8:ACAD:1015::/64 [110/20]
      via FE80::15, Ethernet0/3
 OI  20FF:DB8:ACAD:1016::/64 [110/20]
-     via FE80::15, Ethernet0/3
      via FE80::14, Ethernet0/2
+     via FE80::15, Ethernet0/3   
 ```
 Из вывода команды мы видим что маршрутизатор получает маршруты и маршрут по умолчанию посредством OSPF (аналогично на R13).  
 ### Часть 3. Маршрутизатор R19 находится в зоне 101 и получает только маршрут по умолчанию.  
@@ -142,7 +141,7 @@ OI  20FF:DB8:ACAD:1016::/64 [110/20]
   2. Включаем на соответствующих интерфейсах маршрутизаторов `ip ospf 1 area 101`.
     Для проверки используем команду `show ip route ospf` на маршрутизаторе R19: 
 ```
-R19(config-if)#do sh ip route ospf
+R19#sh ip route ospf
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
        D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
        N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
@@ -155,11 +154,7 @@ Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
 
 Gateway of last resort is 10.1.2.2 to network 0.0.0.0
 
-O*IA  0.0.0.0/0 [110/11] via 10.1.2.2, 00:00:14, Ethernet0/0
-R19(config-if)#
-```
-Для проверки работы OSPFv3 воспользуемся командой `show ipv6 route ospf`  на маршрутизаторе R19:
-```
+O*IA  0.0.0.0/0 [110/11] via 10.1.2.2, 00:14:32, Ethernet0/0
 R19#sh ipv6 route ospf
 IPv6 Routing Table - default - 6 entries
 Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
@@ -186,12 +181,12 @@ ip prefix-list area101 seq 10 permit 0.0.0.0/0
 ipv6 prefix-list area101v6 seq 5 deny 20FF:DB8:ACAD:1000::/64
 ipv6 prefix-list area101v6 seq 10 permit ::/0
 ```
-  3. Применяем созданные prefix-list к зоне 102:  
-IPv4
+  3. Применяем созданные prefix-list к зоне 102:
+IPv4  
 ```
 area 102 filter-list prefix area101 in
 ```  
-IPv6 
+IPv6  
 ```
 address-family ipv6 unicast
   area 102 filter-list prefix area101v6 in
@@ -207,6 +202,45 @@ router ospfv3 1
 ```
 ```
 ipv6 ospf 1 area 0
+```
+### P.S.
+На всех маршрутизаторах стенда была выполненна настройка passive-interface(IPv4, IPv6) для исключения рассылки hello пакетов через неиспользуемые в маршрутизации интерфесы.  
+Пример R19  
+```
+R19#sh run | sec ospf
+ ip ospf 1 area 101
+ ipv6 ospf 1 area 101
+router ospfv3 1
+ router-id 5.5.5.5
+ area 101 stub no-summary
+ !
+ address-family ipv6 unicast
+  passive-interface default
+  no passive-interface Ethernet0/0
+ exit-address-family
+router ospf 1
+ router-id 5.5.5.5
+ area 101 stub no-summary
+ passive-interface default
+ no passive-interface Ethernet0/0
+```
+Также был изменен тип сети loopback интерфейса с "loopback" на "point to point" для распространения их как в фактических настройках.  
+Пример R19  
+```
+R19#sh run int lo1
+Building configuration...
+
+Current configuration : 237 bytes
+!
+interface Loopback1
+ description manage
+ ip address 10.1.1.2 255.255.255.240
+ ip ospf network point-to-point
+ ipv6 address FE80::19 link-local
+ ipv6 address 20FF:DB8:ACAD:1001::19/64
+ ipv6 enable
+ ipv6 ospf network point-to-point
+end
 ```
 _______
   - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab6_ospf/config)
