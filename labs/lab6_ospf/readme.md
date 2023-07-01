@@ -7,7 +7,7 @@ ____
 4. Маршрутизатор R20 находится в зоне 102 и получает все маршруты, кроме маршрутов до сетей зоны 101.
 5. Настройка для IPv6 повторяет логику IPv4.
 ### Схема
-![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab6_ospf/screenshots/scheme.png)
+![scheme]()
 ### Таблица адресации  
 Management
 Device | IPv4 Address  | Subnet Mask    | IPv6 GLA Address         | IPv6 LLA Address
