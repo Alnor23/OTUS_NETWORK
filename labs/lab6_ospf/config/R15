@@ -1,9 +1,3 @@
-R15#sh run
-Building configuration...
-
-Current configuration : 2245 bytes
-!
-! Last configuration change at 23:43:05 UTC Thu Jun 29 2023
 !
 version 15.5
 service timestamps debug datetime msec
@@ -79,9 +73,11 @@ redundancy
 !
 interface Loopback1
  ip address 10.1.1.5 255.255.255.240
+ ip ospf network point-to-point
  ipv6 address FE80::15 link-local
  ipv6 address 20FF:DB8:ACAD:1001::15/64
  ipv6 enable
+ ipv6 ospf network point-to-point
 !
 interface Ethernet0/0
  ip address 10.1.2.26 255.255.255.252
@@ -142,11 +138,21 @@ router ospfv3 1
  area 10 stub
  !
  address-family ipv6 unicast
+  passive-interface default
+  no passive-interface Ethernet0/0
+  no passive-interface Ethernet0/1
+  no passive-interface Ethernet0/3
+  no passive-interface Ethernet1/0
  exit-address-family
 !
 router ospf 1
  router-id 2.2.2.2
  area 10 stub
+ passive-interface default
+ no passive-interface Ethernet0/0
+ no passive-interface Ethernet0/1
+ no passive-interface Ethernet0/3
+ no passive-interface Ethernet1/0
 !
 ip forward-protocol nd
 !
