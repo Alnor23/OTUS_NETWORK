@@ -173,13 +173,13 @@ OI  ::/0 [110/11]
 ### Часть 4. Маршрутизатор R20 находится в зоне 102 и получает все маршруты, кроме маршрутов до сетей зоны 101.
 В этом задание необходимо настроить фильтрацию маршрутов для зоны 102 (ее тип будет normal area) в соответствии с заданием:
   1. Включаем на соответствующих интерфейсах маршрутизаторов R15 и R20 `ip ospf 1 area 102`.
-  2. Создаем prefix-list`ы для IPv4 и IPv6 согласно условию.
+  2. Создаем prefix-list`ы для IPv4 и IPv6 на маршрутизаторе R15(так как он является ABR) согласно условию.
 ```
-R20#sh run | i pre
+R15#sh run | sec prefix
 ip prefix-list area101 seq 5 deny 10.1.2.0/30
-ip prefix-list area101 seq 10 permit 0.0.0.0/0
+ip prefix-list area101 seq 10 permit 0.0.0.0/0 le 32
 ipv6 prefix-list area101v6 seq 5 deny 20FF:DB8:ACAD:1000::/64
-ipv6 prefix-list area101v6 seq 10 permit ::/0
+ipv6 prefix-list area101v6 seq 10 permit ::/0 le 128
 ```
   3. Применяем созданные prefix-list к зоне 102:  
 IPv4  
@@ -192,6 +192,52 @@ address-family ipv6 unicast
   area 102 filter-list prefix area101v6 in
  exit-address-family
 ```
+Выполняем проверку на маршрутизаторе R20:
+```
+R20#sh ip route ospf
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 10 subnets, 3 masks
+O IA     10.1.2.8/30 [110/30] via 10.1.2.29, 00:09:51, Ethernet0/0
+O IA     10.1.2.12/30 [110/30] via 10.1.2.29, 00:09:51, Ethernet0/0
+O IA     10.1.2.16/30 [110/20] via 10.1.2.29, 00:09:58, Ethernet0/0
+O IA     10.1.2.24/30 [110/20] via 10.1.2.29, 00:09:58, Ethernet0/0
+O IA     10.1.2.32/30 [110/20] via 10.1.2.29, 00:09:58, Ethernet0/0
+O IA     10.1.2.36/30 [110/30] via 10.1.2.29, 00:09:51, Ethernet0/0
+R20#sh ipv6 route ospf
+IPv6 Routing Table - default - 11 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, la - LISP alt
+       lr - LISP site-registrations, ld - LISP dyn-eid, a - Application
+OI  20FF:DB8:ACAD:1011::/64 [110/30]
+     via FE80::15, Ethernet0/0
+OI  20FF:DB8:ACAD:1012::/64 [110/30]
+     via FE80::15, Ethernet0/0
+OI  20FF:DB8:ACAD:1013::/64 [110/20]
+     via FE80::15, Ethernet0/0
+OI  20FF:DB8:ACAD:1014::/64 [110/20]
+     via FE80::15, Ethernet0/0
+OI  20FF:DB8:ACAD:1016::/64 [110/20]
+     via FE80::15, Ethernet0/0
+OI  20FF:DB8:ACAD:1017::/64 [110/30]
+     via FE80::15, Ethernet0/0
+```
+Как видно из результатов пропали маршруты до сетей указанных в prefix-list (10.1.2.0/30, 20FF:DB8:ACAD:1000::/64).
 ### Часть 5. Настройка для IPv6 повторяет логику IPv4.
 Настройка для IPv6 была произведена на всех устройствах данной лабораторной работы в логике работы IPv4  
 Пример R15
