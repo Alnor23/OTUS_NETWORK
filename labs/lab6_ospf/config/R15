@@ -1,4 +1,3 @@
-!
 version 15.5
 service timestamps debug datetime msec
 service timestamps log datetime msec
@@ -143,11 +142,13 @@ router ospfv3 1
   no passive-interface Ethernet0/1
   no passive-interface Ethernet0/3
   no passive-interface Ethernet1/0
+  area 102 filter-list prefix area101v6 in
  exit-address-family
 !
 router ospf 1
  router-id 2.2.2.2
  area 10 stub
+ area 102 filter-list prefix area101 in
  passive-interface default
  no passive-interface Ethernet0/0
  no passive-interface Ethernet0/1
@@ -161,6 +162,12 @@ no ip http server
 no ip http secure-server
 !
 !
+ip prefix-list area101 seq 5 deny 10.1.2.0/30
+ip prefix-list area101 seq 10 permit 0.0.0.0/0 le 32
+!
+!
+ipv6 prefix-list area101v6 seq 5 deny 20FF:DB8:ACAD:1000::/64
+ipv6 prefix-list area101v6 seq 10 permit ::/0 le 128
 !
 !
 control-plane
@@ -181,3 +188,4 @@ line vty 0 4
 !
 !
 end
+
