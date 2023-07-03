@@ -7,7 +7,7 @@ ______
 4. Использовать EIGRP named-mode для настройки сети.  
 Настройка осуществляется одновременно для IPv4 и IPv6
 ### Схема  
-![scheme]() 
+![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab8_eigrp/screenshots/scheme.png) 
 ### Таблица адресации  
 Management
 Device | IPv4 Address  | Subnet Mask    | IPv6 GLA Address         | IPv6 LLA Address
