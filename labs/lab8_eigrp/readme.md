@@ -52,4 +52,20 @@ R18(config-router-af)#eigrp router-id 1.1.1.1
 Аналогично настраивается на остальных маршрутизаторах.  
 ### Часть 2. R32 получает только маршрут по умолчанию.
 Для выполнения этой части необходимо:
+Обьявить маршрут по умолчанию для IPv4 и IPv6 на пограничном маршрутизаторе R18:
+```
+R18(config)#ip route 0.0.0.0 0.0.0.0 50.50.1.9
+R18(config)#ipv6 route ::/0 20FF:0DB8:ACAD:7003::24:3
+```
+И включить редистрибьюцию:
+```
+address-family ipv4 unicast autonomous-system 1
+topology base
+redistribute static
+
+address-family ipv4 unicast autonomous-system 1
+topology base
+redistribute static
+```
+
 
