@@ -52,12 +52,12 @@ R18(config-router-af)#eigrp router-id 1.1.1.1
 Аналогично настраивается на остальных маршрутизаторах.  
 ### Часть 2. R32 получает только маршрут по умолчанию.
 Для выполнения этой части необходимо:
-Обьявить маршрут по умолчанию для IPv4 и IPv6 на пограничном маршрутизаторе R18:
+Обьявить маршрут по умолчанию для IPv4 и IPv6 на пограничном маршрутизаторе R18:  
 ```
 R18(config)#ip route 0.0.0.0 0.0.0.0 50.50.1.9
 R18(config)#ipv6 route ::/0 20FF:0DB8:ACAD:7003::24:3
 ```
-И включить редистрибьюцию:
+И включить редистрибьюцию:  
 ```
 address-family ipv4 unicast autonomous-system 1
 topology base
@@ -67,7 +67,7 @@ address-family ipv4 unicast autonomous-system 1
 topology base
 redistribute static
 ```
-Проверка получения маршрута по умолчанию намаршрутизаторе R32:
+Проверка получения маршрута по умолчанию намаршрутизаторе R32:  
 ```
 R32#sh ip route eigrp
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
@@ -109,15 +109,15 @@ D   20FF:DB8:ACAD:7003::/64 [90/2048000]
 D   20FF:DB8:ACAD:7004::/64 [90/2048000]
      via FE80::16, Ethernet0/0
 ```
-### Часть 3. R16-17 анонсируют только суммарные префиксы. 
-Для выполнения этой части необходимо включить auto-summary на R16-17:
+### Часть 3. R16-17 анонсируют только суммарные префиксы.  
+Для выполнения этой части необходимо включить auto-summary на R16-17:  
 ```
  address-family ipv4 unicast autonomous-system 1
   !
   topology base
    auto-summary
 ```
-Проверка:
+Проверка:  
 ```
 R18#show ip eigrp topology all-links
 EIGRP-IPv4 VR(SPB) Topology Table for AS(1)/ID(1.1.1.1)
@@ -141,7 +141,7 @@ P 10.2.1.0/28, 1 successors, FD is 163840, serno 3
 P 10.2.3.0/28, 1 successors, FD is 196608000, serno 7
         via 10.2.2.1 (196608000/131072000), Ethernet0/1
 ```
-Здесь видно что маршрутизатор R18 получил от маршрутизаторов R16-17 обьединенные маршруты.  
+Здесь видно что маршрутизатор R18 получил от маршрутизаторов R16-17 обьединенные маршруты.    
  _______
   - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab8_eigrp/config)
   
