@@ -62,10 +62,6 @@ R18(config)#ipv6 route ::/0 20FF:0DB8:ACAD:7003::24:3
 address-family ipv4 unicast autonomous-system 1
 topology base
 redistribute static
-
-address-family ipv4 unicast autonomous-system 1
-topology base
-redistribute static
 ```
 Проверка получения маршрута по умолчанию намаршрутизаторе R32:  
 ```
