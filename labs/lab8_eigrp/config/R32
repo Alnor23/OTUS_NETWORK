@@ -1,9 +1,9 @@
 R32#sh run
 Building configuration...
 
-Current configuration : 1614 bytes
+Current configuration : 1795 bytes
 !
-! Last configuration change at 20:25:11 UTC Sat Jul 15 2023
+! Last configuration change at 21:09:32 UTC Wed Jul 26 2023
 !
 version 15.5
 service timestamps debug datetime msec
@@ -109,6 +109,7 @@ router eigrp SPB
  address-family ipv4 unicast autonomous-system 1
   !
   topology base
+   distribute-list 2 in Ethernet0/0
   exit-af-topology
   network 10.2.0.0 0.0.255.255
   eigrp router-id 4.4.4.4
@@ -117,6 +118,7 @@ router eigrp SPB
  address-family ipv6 unicast autonomous-system 1
   !
   topology base
+   distribute-list prefix-list INB in Ethernet0/0
   exit-af-topology
   eigrp router-id 4.4.4.4
  exit-address-family
@@ -129,6 +131,10 @@ no ip http secure-server
 !
 !
 !
+ipv6 prefix-list INB seq 5 permit ::/0
+!
+access-list 2 permit 0.0.0.0
+access-list 2 deny   any
 !
 control-plane
 !
