@@ -63,7 +63,7 @@ address-family ipv4 unicast autonomous-system 1
 topology base
 redistribute static
 ```
-Проверка получения маршрута по умолчанию намаршрутизаторе R32:  
+Проверка получения маршрута по умолчанию на маршрутизаторе R32:  
 ```
 R32#sh ip route eigrp
 Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
@@ -105,6 +105,69 @@ D   20FF:DB8:ACAD:7003::/64 [90/2048000]
 D   20FF:DB8:ACAD:7004::/64 [90/2048000]
      via FE80::16, Ethernet0/0
 ```
+Как видно в таблице маршрутизации содержатся все маршруты полученные посредством EIGRP, для того чтобы остались только маршруты по умолчанию необходимо выполнить следующее:
+1. Создать ACL для ipv4 и prefix-list для ipv6:
+```
+R32#sh ipv6 prefix-list INB
+ipv6 prefix-list INB: 1 entries
+seq 5 permit ::/0
+R32#sh access-list 2
+Standard IP access list 2
+10 permit 0.0.0.0 (1 match)
+20 deny   any (10 matches)
+```
+Применить данные списки к маршрутизатору EIGRP командой distribute-list:
+```
+router eigrp SPB
+ !
+ address-family ipv4 unicast autonomous-system 1
+  !
+  topology base
+   distribute-list 2 in Ethernet0/0
+  exit-af-topology
+  network 10.2.0.0 0.0.255.255
+  eigrp router-id 4.4.4.4
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 1
+  !
+  topology base
+   distribute-list prefix-list INB in Ethernet0/0
+  exit-af-topology
+  eigrp router-id 4.4.4.4
+ exit-address-family
+```
+После этого проверяем маршруты:
+```
+R32#sh ip route eigrp
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 10.2.2.9 to network 0.0.0.0
+
+D*EX  0.0.0.0/0 [170/2048000] via 10.2.2.9, 01:29:58, Ethernet0/0
+R32#sh ipv6 route eigrp
+IPv6 Routing Table - default - 6 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1, OE2 - OSPF ext 2
+       ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2, la - LISP alt
+       lr - LISP site-registrations, ld - LISP dyn-eid, a - Application
+EX  ::/0 [170/2048000]
+     via FE80::16, Ethernet0/0
+```
+Как видим в таблице остались только маршруты по умолчанию.
+
 ### Часть 3. R16-17 анонсируют только суммарные префиксы.  
 Для выполнения этой части необходимо включить auto-summary на R16-17:  
 ```
