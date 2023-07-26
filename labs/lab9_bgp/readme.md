@@ -7,6 +7,9 @@ ________
 4. Настроите eBGP между офисом С.-Петербург и провайдером Триада.
 5. Организуете IP доступность между пограничным роутерами офисами Москва и С.-Петербург.
 
+### Схема
+![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab9_bgp/screenshots/Scheme.png)
+
 ### Таблица адресации
 Management
 Device | IPv4 Address  | Subnet Mask    | IPv6 GLA Address         | IPv6 LLA Address | AS
