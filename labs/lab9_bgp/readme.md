@@ -121,4 +121,4 @@ BGP table version is 1, main routing table version 1
 Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
 50.50.1.29      4          101      37      38        1    0    0 00:30:35        0
 ```
-На остальных ситуация аналогична.  
+На остальных вывод команды аналогичен.  
