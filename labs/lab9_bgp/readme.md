@@ -77,4 +77,48 @@ R21    |e0/0  |IPv6          |20FF:0DB8:ACAD:7010::21:/64   |20FF:0DB8:ACAD:7010
 R15    |e0/2  |IPv4          |50.50.1.38/30                 |50.50.1.36/30
 R15    |e0/2  |IPv6          |20FF:0DB8:ACAD:7010::15:2/64  |20FF:0DB8:ACAD:7010::/64
 
-### Часть 1. Настроите eBGP между офисом Москва и двумя провайдерами - Киторн и Ламас.
+### Часть 1. Настроите eBGP между офисом Москва и двумя провайдерами - Киторн и Ламас.  
+  Для выполнения данного задания необходимо на маршрутизаторах R14, R15 установить соседство с маршрутизаторами R22 и R21 соответственно:  
+R14   
+```
+R14#sh run | s bgp
+router bgp 1001
+ bgp router-id 10.10.1.3
+ bgp log-neighbor-changes
+ neighbor 50.50.1.29 remote-as 101
+```
+R15  
+```
+R15#sh run | s bgp
+router bgp 1001
+ bgp router-id 10.10.1.5
+ bgp log-neighbor-changes
+ neighbor 50.50.1.37 remote-as 301
+```
+R22  
+```
+R22#sh run | sec bgp
+router bgp 101
+ bgp router-id 10.11.1.2
+ bgp log-neighbor-changes
+ neighbor 50.50.1.30 remote-as 1001
+```
+R21  
+```
+R21#sh run | s bgp
+router bgp 301
+ bgp router-id 10.12.1.2
+ bgp log-neighbor-changes
+ neighbor 50.50.1.38 remote-as 1001
+```
+В качестве bgp router-id выступает management loopback маршрутизатора.  
+Для проверки установления соседства воспользуемся командой `sh ip bgp summary` на маршрутизаторе R14:  
+```
+R14#sh ip bgp summary
+BGP router identifier 10.10.1.3, local AS number 1001
+BGP table version is 1, main routing table version 1
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+50.50.1.29      4          101      37      38        1    0    0 00:30:35        0
+```
+На остальных ситуация аналогична.  
