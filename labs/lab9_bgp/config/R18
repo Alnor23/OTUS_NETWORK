@@ -1,0 +1,177 @@
+R18#sh run
+Building configuration...
+
+Current configuration : 2387 bytes
+!
+! Last configuration change at 00:00:50 UTC Sat Jul 29 2023
+!
+version 15.5
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R18
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+!
+!
+!
+bsd-client server url https://cloudsso.cisco.com/as/token.oauth2
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+cts logging verbose
+!
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback1
+ description manage
+ ip address 10.2.1.2 255.255.255.240
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:2001::18/64
+ ipv6 enable
+!
+interface Ethernet0/0
+ description to R16
+ ip address 10.2.2.5 255.255.255.252
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:2012::18:0/64
+ ipv6 enable
+!
+interface Ethernet0/1
+ description to R17
+ ip address 10.2.2.2 255.255.255.252
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:2011::18:1/64
+ ipv6 enable
+!
+interface Ethernet0/2
+ description to R24
+ ip address 50.50.1.10 255.255.255.252
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:7003::18:2/64
+ ipv6 enable
+!
+interface Ethernet0/3
+ description to R26
+ ip address 50.50.1.14 255.255.255.252
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:7004::18:3/64
+ ipv6 enable
+!
+!
+router eigrp SPB
+ !
+ address-family ipv4 unicast autonomous-system 1
+  !
+  topology base
+   redistribute static
+  exit-af-topology
+  network 10.2.0.0 0.0.255.255
+  eigrp router-id 1.1.1.1
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 1
+  !
+  af-interface Ethernet0/2
+   passive-interface
+  exit-af-interface
+  !
+  af-interface Ethernet0/3
+   passive-interface
+  exit-af-interface
+  !
+  topology base
+   redistribute static
+  exit-af-topology
+  eigrp router-id 1.1.1.1
+ exit-address-family
+!
+router bgp 2042
+ bgp router-id 10.2.1.2
+ bgp log-neighbor-changes
+ network 10.2.1.0 mask 255.255.255.240
+ neighbor 50.50.1.9 remote-as 520
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 50.50.1.9
+!
+ipv6 route ::/0 20FF:DB8:ACAD:7003::24:3
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input none
+!
+!
+end
