@@ -105,3 +105,30 @@ R23    |e0/2  |IPv4          |10.10.2.14/30                 |10.10.2.12/30
 R23    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::23:2/64  |20FF:0DB8:ACAD:4014::/64
 
 ### Часть 1. Настройте iBGP в офисе Москва между маршрутизаторами R14 и R15.
+Для настройки соседства по iBGP между R14 и R15 необходимо добавить каждому маршрутизатору адрес loopback`а соответствующего соседа в конфигурацию:
+R14  
+```
+neighbor 10.1.1.5 remote-as 1001
+```
+R15  
+```
+neighbor 10.1.1.3 remote-as 1001
+```
+Выполним проверку на R14
+```
+R14#sh ip bgp summary
+BGP router identifier 10.1.1.3, local AS number 1001
+BGP table version is 4, main routing table version 4
+1 network entries using 144 bytes of memory
+1 path entries using 80 bytes of memory
+1/1 BGP path/bestpath attribute entries using 152 bytes of memory
+1 BGP AS-PATH entries using 40 bytes of memory
+0 BGP route-map cache entries using 0 bytes of memory
+0 BGP filter-list cache entries using 0 bytes of memory
+BGP using 416 total bytes of memory
+BGP activity 2/1 prefixes, 2/1 paths, scan interval 60 secs
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.1.1.5        4         1001       0       0        1    0    0 never    Idle
+50.50.1.29      4          101     212     211        4    0    0 03:08:22        1
+```
