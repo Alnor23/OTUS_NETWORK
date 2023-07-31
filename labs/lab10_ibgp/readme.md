@@ -116,7 +116,7 @@ R15
 neighbor 10.1.1.3 remote-as 1001
 neighbor 10.1.1.3 update-source l1
 ```
-Выполним проверку на R14  
+Выполним проверку на R14:  
 ```
 R14#sh ip bgp summary
 BGP router identifier 10.1.1.3, local AS number 1001
@@ -134,4 +134,103 @@ Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State
 10.1.1.5        4         1001       0       0        1    0    0 never    Idle
 50.50.1.29      4          101     212     211        4    0    0 03:08:22        1
 ```
-### Часть 2. Настройте iBGP в провайдере Триада, с использованием RR.
+### Часть 2. Настройте iBGP в провайдере Триада, с использованием RR.  
+Выполнение этой части заключается в настройке iBGP между маршрутизаторами R23, R24, R25, R26 с изпользованием Route-Reflector. Роль RR-server`а будет выполнять R24, а остальные RR-client.  
+Создадим на R24 peer-group где в качестве соседей укажем R23, R25, R26(Также настроим обмен информацией между loopback интерфейсами):  
+R24  
+```
+R24#sh run | s bgp
+router bgp 520
+ bgp router-id 10.10.1.3
+ bgp log-neighbor-changes
+ neighbor RR-CLIENT peer-group
+ neighbor RR-CLIENT remote-as 520
+ neighbor RR-CLIENT update-source Loopback1
+ neighbor RR-CLIENT route-reflector-client
+ neighbor 10.10.1.2 peer-group RR-CLIENT
+ neighbor 10.10.1.4 peer-group RR-CLIENT
+ neighbor 10.10.1.5 peer-group RR-CLIENT
+ neighbor 50.50.1.6 remote-as 301
+ neighbor 50.50.1.10 remote-as 2042
+```
+На остальных маршрутизаторах необходимо поднять соседство с R24 (Так как конфигурация на клиентах одинакова для примера берется R23):  
+R23  
+```
+R23(config)#do sh run | s bgp
+router bgp 520
+ bgp log-neighbor-changes
+ neighbor 10.10.1.3 remote-as 520
+ neighbor 10.10.1.3 update-source Loopback1
+```
+Для проверки посмотрим вывод команды `show ip bgp summary` на RR-server R24 и RR-client R25:  
+R24  
+```
+R24#sh ip bgp sum
+BGP router identifier 10.10.1.3, local AS number 520
+BGP table version is 2, main routing table version 2
+1 network entries using 144 bytes of memory
+1 path entries using 80 bytes of memory
+1/1 BGP path/bestpath attribute entries using 152 bytes of memory
+1 BGP AS-PATH entries using 24 bytes of memory
+0 BGP route-map cache entries using 0 bytes of memory
+0 BGP filter-list cache entries using 0 bytes of memory
+BGP using 400 total bytes of memory
+BGP activity 1/0 prefixes, 1/0 paths, scan interval 60 secs
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.10.1.2       4          520       9      10        2    0    0 00:04:54        0
+10.10.1.4       4          520       6       9        2    0    0 00:02:55        0
+10.10.1.5       4          520       5       9        2    0    0 00:02:54        0
+50.50.1.6       4          301     164     163        2    0    0 02:25:10        0
+50.50.1.10      4         2042     163     163        2    0    0 02:25:05        1
+```
+R25 
+```
+R25#sh ip bgp summary
+BGP router identifier 10.10.1.4, local AS number 520
+BGP table version is 1, main routing table version 1
+1 network entries using 144 bytes of memory
+1 path entries using 80 bytes of memory
+1/0 BGP path/bestpath attribute entries using 152 bytes of memory
+1 BGP AS-PATH entries using 24 bytes of memory
+0 BGP route-map cache entries using 0 bytes of memory
+0 BGP filter-list cache entries using 0 bytes of memory
+BGP using 400 total bytes of memory
+BGP activity 1/0 prefixes, 1/0 paths, scan interval 60 secs
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.10.1.3       4          520       9       5        1    0    0 00:02:40        1
+```
+Как видно из результатов проверки RR-server(R24) установил сессии с тремя остальными RR-client(R25), а RR-client(R24) только с RR-server(R25).  
+
+### Часть 3. Настройте офис Москва так, чтобы приоритетным провайдером стал Ламас.  
+Перед началом выполнения этого задания посмотрим как идет трафик с R14(AS 1001 Москва) к R18(AS 2042 СПб):  
+`sh ip bgp`  
+```
+R14#sh ip bgp
+BGP table version is 4, local router ID is 10.1.1.3
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      0.0.0.0                  0         32768 i
+ *>  10.1.1.5/32      10.1.2.34               11         32768 i
+ *>  10.2.1.0/28      50.50.1.29                             0 101 301 520 2042
+```
+`traceroute` 
+```
+R14#traceroute 10.2.1.2 source 10.1.1.3 numeric
+Type escape sequence to abort.
+Tracing the route to 10.2.1.2
+VRF info: (vrf in name/id, vrf out name/id)
+  1 50.50.1.29 1 msec 10 msec 0 msec
+  2 50.50.1.34 1 msec 0 msec 0 msec
+  3 50.50.1.5 1 msec 0 msec 1 msec
+  4 50.50.1.10 1 msec *  1 msec
+```  
+Как видно из вывода команд выбирается маршрут через AS 101 Киторн, необходимо сделать чтобы трафик шел через AS 301 Ламас.  
+Для этого создадим на маршрутизаторе R15 который подключен к AS 301 Ламас route-map который будет задавать для всех префиксов полученных оттуда значение атрибута local-preference выше чем значение default(100):  
+
