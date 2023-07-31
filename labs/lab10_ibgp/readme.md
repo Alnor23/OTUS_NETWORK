@@ -203,7 +203,7 @@ BGP activity 1/0 prefixes, 1/0 paths, scan interval 60 secs
 Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
 10.10.1.3       4          520       9       5        1    0    0 00:02:40        1
 ```
-Как видно из результатов проверки RR-server(R24) установил сессии с тремя остальными RR-client(R25), а RR-client(R24) только с RR-server(R25).  
+Как видно из результатов проверки RR-server(R24) установил сессии с тремя остальными RR-client(R23, R25, R26), а RR-client(R25) только с RR-server(R25).  
 
 ### Часть 3. Настройте офис Москва так, чтобы приоритетным провайдером стал Ламас.  
 Перед началом выполнения этого задания посмотрим как идет трафик с R14(AS 1001 Москва) к R18(AS 2042 СПб):  
