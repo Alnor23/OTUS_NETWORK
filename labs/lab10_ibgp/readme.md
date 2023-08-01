@@ -4,7 +4,7 @@ ______
 1. Настройте iBGP в офисе Москва между маршрутизаторами R14 и R15.  
 2. Настройте iBGP в провайдере Триада, с использованием RR.  
 3. Настройте офис Москва так, чтобы приоритетным провайдером стал Ламас.  
-4. Настройте офиса С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно.  
+4. Настройте офис С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно.  
 5. Все сети в лабораторной работе должны иметь IP связность.
 ### Схема  
 ![scheme](https://github.com/Alnor23/OTUS_NETWORK/blob/main/labs/lab9_bgp/screenshots/Scheme.png)  
@@ -118,21 +118,21 @@ neighbor 10.1.1.3 update-source l1
 ```
 Выполним проверку на R14:  
 ```
-R14#sh ip bgp summary
+R14(config-router)#do sh ip bgp sum
 BGP router identifier 10.1.1.3, local AS number 1001
-BGP table version is 4, main routing table version 4
-1 network entries using 144 bytes of memory
-1 path entries using 80 bytes of memory
-1/1 BGP path/bestpath attribute entries using 152 bytes of memory
-1 BGP AS-PATH entries using 40 bytes of memory
+BGP table version is 6, main routing table version 6
+3 network entries using 432 bytes of memory
+4 path entries using 320 bytes of memory
+4/3 BGP path/bestpath attribute entries using 608 bytes of memory
+2 BGP AS-PATH entries using 64 bytes of memory
 0 BGP route-map cache entries using 0 bytes of memory
 0 BGP filter-list cache entries using 0 bytes of memory
-BGP using 416 total bytes of memory
-BGP activity 2/1 prefixes, 2/1 paths, scan interval 60 secs
+BGP using 1424 total bytes of memory
+BGP activity 3/0 prefixes, 4/0 paths, scan interval 60 secs
 
 Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
-10.1.1.5        4         1001       0       0        1    0    0 never    Idle
-50.50.1.29      4          101     212     211        4    0    0 03:08:22        1
+10.1.1.5        4         1001       5       8        6    0    0 00:00:30        1
+50.50.1.29      4          101      12       8        5    0    0 00:03:20        1
 ```
 Между R14 и R15 установилось iBGP соседство.
 
@@ -234,5 +234,36 @@ VRF info: (vrf in name/id, vrf out name/id)
   4 50.50.1.10 1 msec *  1 msec
 ```  
 Как видно из вывода команд выбирается маршрут через AS 101 Киторн, необходимо сделать чтобы трафик шел через AS 301 Ламас.  
-Для этого создадим на маршрутизаторе R15 который подключен к AS 301 Ламас route-map который будет задавать для всех префиксов полученных оттуда значение атрибута local-preference выше чем значение default(100):  
+Для этого сделаем маршрутизатор R15 который подключен к AS 301 Ламас маршрутизатором next-hop для R14 с помощью команды `neighbor 10.1.1.3 next-hop-self`, а после этого посмотрим как теперь идет трафик:  
+`sh ip bgp`  
+```
+R14#sh ip bgp
+BGP table version is 6, local router ID is 10.1.1.3
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      0.0.0.0                  0         32768 i
+ *>  10.1.1.5/32      10.1.2.34               11         32768 i
+ *>i 10.2.1.0/28      10.1.1.5                 0    100      0 301 520 2042 i
+ *                    50.50.1.29                             0 101 301 520 2042 i
+```
+`traceroute` 
+```
+R14#traceroute 10.2.1.2 source 10.1.1.3 numeric
+Type escape sequence to abort.
+Tracing the route to 10.2.1.2
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.1.2.34 0 msec 0 msec 4 msec
+  2 50.50.1.37 0 msec 0 msec 1 msec
+  3 50.50.1.5 0 msec 1 msec 1 msec
+  4 50.50.1.10 0 msec *  1 msec
+```
+Видно что при наличии двух маршрутов из AS1001 Москва к AS 2042 CПб лучшим стал маршрут черезAS 301 Ламас, также по результатам traceroute трафик идет через AS 301 Ламас.  
+
+### Часть 4. Настройте офис С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно.
+Перед выполнением данного задания посмотрим вывод команд `sh ip route bgp` и `sh ip bgp`
 
