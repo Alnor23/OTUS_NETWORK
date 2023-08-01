@@ -266,5 +266,149 @@ VRF info: (vrf in name/id, vrf out name/id)
 Видно что при наличии двух маршрутов из AS1001 Москва к AS 2042 CПб лучшим стал маршрут черезAS 301 Ламас, также по результатам traceroute трафик идет через AS 301 Ламас.  
 
 ### Часть 4. Настройте офис С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно.
-Перед выполнением данного задания посмотрим вывод команд `sh ip route bgp` и `sh ip bgp`
+Перед выполнением данного задания посмотрим вывод команд `sh ip route bgp` и `sh ip bgp` на маршрутизаторе R18 (AS 2042 СПб):  
+```
+R18#sh ip route bgp
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 50.50.1.9 to network 0.0.0.0
+
+      10.0.0.0/8 is variably subnetted, 12 subnets, 4 masks
+B        10.1.1.3/32 [20/0] via 50.50.1.9, 00:05:30
+B        10.1.1.5/32 [20/0] via 50.50.1.9, 00:05:30
+B        10.10.1.3/32 [20/0] via 50.50.1.9, 00:00:06
+R18#sh ip bgp
+BGP table version is 19, local router ID is 10.2.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      50.50.1.9                              0 520 301 1001 i
+ *>  10.1.1.5/32      50.50.1.9                              0 520 301 101 1001 i
+ *>  10.2.1.0/28      0.0.0.0                  0         32768 i
+ *   10.10.1.3/32     50.50.1.13                             0 520 i
+ *>                   50.50.1.9                0             0 520 i
+```
+Как видно в таблице маршрутов есть только 1 маршрут до loopback интерфейса R24(AS 520 Триада) 10.10.1.3/32.  
+
+Для выполнения условия задания необходимо настроить на данном маршрутизаторе балансировку.  
+Включается балансировка следующим образом:  
+```
+router bgp 2042
+ bgp bestpath as-path multipath-relax
+ maximum-paths 2
+```
+Далее выполним такую же проверку как и  в начале:  
+
+```
+R18#sh ip route bgp
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 50.50.1.9 to network 0.0.0.0
+
+      10.0.0.0/8 is variably subnetted, 12 subnets, 4 masks
+B        10.1.1.3/32 [20/0] via 50.50.1.9, 00:09:07
+B        10.1.1.5/32 [20/0] via 50.50.1.9, 00:09:07
+B        10.10.1.3/32 [20/0] via 50.50.1.13, 00:00:13
+                      [20/0] via 50.50.1.9, 00:00:13
+R18#sh ip bgp
+BGP table version is 20, local router ID is 10.2.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      50.50.1.9                              0 520 301 1001 i
+ *>  10.1.1.5/32      50.50.1.9                              0 520 301 101 1001 i
+ *>  10.2.1.0/28      0.0.0.0                  0         32768 i
+ *m  10.10.1.3/32     50.50.1.13                             0 520 i
+ *>                   50.50.1.9                0             0 520 i
+```
+По результатам видно что теперь у нас 2 маршрута да искомого адреса. 
+
+### Часть 5. Все сети в лабораторной работе должны иметь IP связность.
+Так как на стэнде в локациях настроены IGP, необходимо настроить их редистрибьюцию в BGP процесс: 
+В AS 1001 Москва настроен OSPF:  
+```
+router bgp 1001
+ redistribute ospf 1
+```
+В AS 520 Триада настроен ISIS:  
+```
+router bgp 520
+ redistribute isis level-1-2
+```
+В AS 2042 СПб настроен named EIGRP(Поэтому сети добавляются вручную):  
+```
+router bgp 2042
+ network 10.2.1.0 mask 255.255.255.240
+ network 10.2.1.16 mask 255.255.255.248
+ network 10.2.3.0 mask 255.255.255.240
+ network 10.2.3.16 mask 255.255.255.240
+```
+Для проверки настройки посмотри таблийу маршрутов на маршрутизаторе R21 AS 301 Ламас:
+```
+R21#sh ip route BGP
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 25 subnets, 4 masks
+B        10.1.1.3/32 [20/0] via 50.50.1.38, 01:36:49
+B        10.1.1.5/32 [20/0] via 50.50.1.33, 01:38:28
+B        10.1.1.16/29 [20/0] via 50.50.1.38, 00:42:57
+B        10.1.2.0/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.2.8/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.2.12/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.2.16/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.2.24/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.2.28/30 [20/0] via 50.50.1.33, 00:53:11
+B        10.1.2.32/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.2.36/30 [20/0] via 50.50.1.38, 00:53:11
+B        10.1.3.0/28 [20/0] via 50.50.1.38, 00:42:22
+B        10.1.3.16/28 [20/0] via 50.50.1.38, 00:39:34
+B        10.2.1.0/28 [20/0] via 50.50.1.5, 05:22:43
+B        10.2.1.16/29 [20/0] via 50.50.1.5, 00:05:52
+B        10.2.3.0/28 [20/0] via 50.50.1.5, 00:05:20
+B        10.2.3.16/28 [20/0] via 50.50.1.5, 00:04:50
+B        10.10.1.2/32 [20/20] via 50.50.1.5, 00:37:22
+B        10.10.1.3/32 [20/0] via 50.50.1.5, 01:03:44
+B        10.10.1.4/32 [20/30] via 50.50.1.5, 00:37:22
+B        10.10.1.5/32 [20/20] via 50.50.1.5, 00:37:22
+B        10.10.2.0/30 [20/20] via 50.50.1.5, 00:37:22
+B        10.10.2.4/30 [20/20] via 50.50.1.5, 00:37:22
+```
+Видно что ему приходят префиксы из всех AS.
+_______
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab10_ibgp/config)
+
 
