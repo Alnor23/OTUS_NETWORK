@@ -1,9 +1,7 @@
 R14#sh run
 Building configuration...
 
-Current configuration : 3093 bytes
-!
-! Last configuration change at 00:50:41 UTC Tue Aug 1 2023
+Current configuration : 3169 bytes
 !
 version 15.5
 service timestamps debug datetime msec
@@ -175,6 +173,8 @@ router bgp 1001
  redistribute ospf 1
  neighbor 10.1.1.5 remote-as 1001
  neighbor 10.1.1.5 update-source Loopback1
+ neighbor 10.1.1.5 next-hop-self
+ neighbor 10.1.1.5 route-map SETLOCAL150 in
  neighbor 50.50.1.29 remote-as 101
 !
 ip forward-protocol nd
@@ -183,6 +183,9 @@ ip forward-protocol nd
 no ip http server
 no ip http secure-server
 !
+!
+route-map SETLOCAL150 permit 10
+ set local-preference 150
 !
 !
 !
@@ -204,3 +207,4 @@ line vty 0 4
 !
 !
 end
+
