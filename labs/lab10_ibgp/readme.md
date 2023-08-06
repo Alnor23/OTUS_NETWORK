@@ -138,7 +138,7 @@ Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State
 
 ### Часть 2. Настройте iBGP в провайдере Триада, с использованием RR.  
 Выполнение этой части заключается в настройке iBGP между маршрутизаторами R23, R24, R25, R26 с изпользованием Route-Reflector. Роль RR-server`а будет выполнять R24, а остальные RR-client.  
-Создадим на R24 peer-group где в качестве соседей укажем R23, R25, R26(Также настроим обмен информацией между loopback интерфейсами):  
+Создадим на R24 peer-group где в качестве соседей укажем R23, R25, R26(Также настроим обмен информацией между loopback интерфейсами и next-hop для peer-group):  
 R24  
 ```
 R24#sh run | s bgp
@@ -149,6 +149,7 @@ router bgp 520
  neighbor RR-CLIENT remote-as 520
  neighbor RR-CLIENT update-source Loopback1
  neighbor RR-CLIENT route-reflector-client
+ neighbor RR-CLIENT next-hop-self
  neighbor 10.10.1.2 peer-group RR-CLIENT
  neighbor 10.10.1.4 peer-group RR-CLIENT
  neighbor 10.10.1.5 peer-group RR-CLIENT
