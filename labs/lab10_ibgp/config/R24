@@ -1,9 +1,9 @@
 R24#sh run
 Building configuration...
 
-Current configuration : 2466 bytes
+Current configuration : 2500 bytes
 !
-! Last configuration change at 01:11:17 UTC Tue Aug 1 2023
+! Last configuration change at 11:15:47 UTC Sun Aug 6 2023
 !
 version 15.5
 service timestamps debug datetime msec
@@ -145,6 +145,7 @@ router bgp 520
  neighbor RR-CLIENT remote-as 520
  neighbor RR-CLIENT update-source Loopback1
  neighbor RR-CLIENT route-reflector-client
+ neighbor RR-CLIENT next-hop-self
  neighbor 10.10.1.2 peer-group RR-CLIENT
  neighbor 10.10.1.4 peer-group RR-CLIENT
  neighbor 10.10.1.5 peer-group RR-CLIENT
