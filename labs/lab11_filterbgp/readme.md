@@ -268,7 +268,167 @@ RPKI validation codes: V valid, I invalid, N Not found
 
 Total number of prefixes 4
 ```
-Как видно мы анонсируем только префиксы нашей AS (10.2.0.0/16). 
+Как видно мы анонсируем только префиксы нашей AS (10.2.0.0/16).  
 
 ### Часть 3. Настроить провайдера Киторн так, чтобы в офис Москва отдавался только маршрут по умолчанию.  
+Сделаем настройку на R22 чтобы он был маршрутом по умолчанию для R14:
+```
+R22#sh run | sec bgp
+ neighbor 50.50.1.30 default-originate
+```
+После этого посмотрим что AS101 (Киторн)R22 анонсирует AS 1001(Москва)R14:  
+```
+R22#sh ip bgp neighbors 50.50.1.30 advertised-routes
+BGP table version is 134, local router ID is 10.11.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
 
+Originating default network 0.0.0.0
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.2.1.0/28      50.50.1.1                              0 520 2042 i
+ *>  10.2.1.16/29     50.50.1.1                              0 520 2042 i
+ *>  10.2.3.0/28      50.50.1.1                              0 520 2042 i
+ *>  10.2.3.16/28     50.50.1.1                              0 520 2042 i
+ *>  10.10.1.2/32     50.50.1.1                              0 520 ?
+ *>  10.10.1.3/32     50.50.1.1                              0 520 i
+ *>  10.10.1.4/32     50.50.1.1                              0 520 ?
+ *>  10.10.1.5/32     50.50.1.1                              0 520 ?
+ *>  10.10.2.0/30     50.50.1.1                              0 520 ?
+ *>  10.10.2.4/30     50.50.1.1                              0 520 ?
+
+Total number of prefixes 10
+
+```
+Видно что кроме маршрута по умолчанию отдаются другие префиксы.  
+Создадим необходимый prefix-list (запрещающий все сети) и привяжем его к route-map, и в дальнейшем назначим этот route-map на соседа:  
+```
+R22#sh run | sec pref
+ip prefix-list NONET seq 5 deny 0.0.0.0/0 le 32
+ match ip address prefix-list NONET
+
+R22#sh run | sec route-map
+ neighbor 50.50.1.30 route-map NOT out
+route-map NOT permit 10
+ match ip address prefix-list NONET
+```
+После этого еще раз посмотрим какие префиксы мы анонсируем:  
+```
+R22#sh ip bgp neighbors 50.50.1.30 advertised-routes
+BGP table version is 134, local router ID is 10.11.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+Originating default network 0.0.0.0
+
+     Network          Next Hop            Metric LocPrf Weight Path
+
+Total number of prefixes 0
+```
+Также посмотрим какие префиксы принимает R14:  
+```
+R14#sh ip bgp neighbors 50.50.1.29 received-routes
+BGP table version is 109, local router ID is 10.1.1.3
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  0.0.0.0          50.50.1.29                             0 101 i
+
+Total number of prefixes 1
+```
+Из этого можно сделать что  AS101 (Киторн)R22 анонсирует AS 1001(Москва)R14 только маршрут по умолчанию.  
+
+### Часть 4. Настроить провайдера Ламас так, чтобы в офис Москва отдавался только маршрут по умолчанию и префикс офиса С.-Петербург.  
+Сделаем настройку на R21 чтобы он был маршрутом по умолчанию для R14:  
+```
+R21#sh run | sec bgp
+ neighbor 50.50.1.38 default-originate
+```
+После этого посмотрим что A301 (Ламас)R21 анонсирует AS 1001(Москва)R14:  
+```
+R21#sh ip bgp neighbors 50.50.1.38 advertised-routes
+BGP table version is 112, local router ID is 10.12.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+Originating default network 0.0.0.0
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.2.1.0/28      50.50.1.5                              0 520 2042 i
+ *>  10.2.1.16/29     50.50.1.5                              0 520 2042 i
+ *>  10.2.3.0/28      50.50.1.5                              0 520 2042 i
+ *>  10.2.3.16/28     50.50.1.5                              0 520 2042 i
+ *>  10.10.1.2/32     50.50.1.5               20             0 520 ?
+ *>  10.10.1.3/32     50.50.1.5                0             0 520 i
+ *>  10.10.1.4/32     50.50.1.5               30             0 520 ?
+ *>  10.10.1.5/32     50.50.1.5               20             0 520 ?
+ *>  10.10.2.0/30     50.50.1.5               20             0 520 ?
+ *>  10.10.2.4/30     50.50.1.5               20             0 520 ?
+
+Total number of prefixes 10
+```
+Видно что кроме маршрута по умолчанию и префиксов до СПб (10.2.0.0/16) отдаются и другие префиксы.  
+Создадим необходимый prefix-list (запрещающий все сети, кроме (10.2.0.0/16)) и привяжем его к route-map, и в дальнейшем назначим этот route-map на соседа:  
+```
+R21#sh run | s  prefix-list
+ip prefix-list STOP seq 5 permit 10.2.0.0/16 ge 17
+ match ip address prefix-list STOP
+R21#sh run | s  route-map
+ neighbor 50.50.1.38 route-map RMSTOP out
+route-map RMSTOP permit 10
+ match ip address prefix-list STOP
+```
+После этого еще раз посмотрим какие префиксы мы анонсируем:  
+```
+R21#sh ip bgp neighbors 50.50.1.38 advertised-routes
+BGP table version is 112, local router ID is 10.12.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+Originating default network 0.0.0.0
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.2.1.0/28      50.50.1.5                              0 520 2042 i
+ *>  10.2.1.16/29     50.50.1.5                              0 520 2042 i
+ *>  10.2.3.0/28      50.50.1.5                              0 520 2042 i
+ *>  10.2.3.16/28     50.50.1.5                              0 520 2042 i
+
+Total number of prefixes 4
+```
+Также посмотрим какие префиксы принимает R15: 
+
+```
+R15#sh ip bgp neighbors 50.50.1.37 received-routes
+BGP table version is 140, local router ID is 10.1.1.5
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  0.0.0.0          50.50.1.37                             0 301 i
+ *>  10.2.1.0/28      50.50.1.37                             0 301 520 2042 i
+ *>  10.2.1.16/29     50.50.1.37                             0 301 520 2042 i
+ *>  10.2.3.0/28      50.50.1.37                             0 301 520 2042 i
+ *>  10.2.3.16/28     50.50.1.37                             0 301 520 2042 i
+```
+Из этого можно сделать что  AS301 (Ламас)R21 анонсирует AS 1001(Москва)R14 только маршрут по умолчанию и сети до AS2042 (СПБ) (10.2.0.0/16).  
+_______
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab11_filterbgp/config)
