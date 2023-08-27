@@ -108,3 +108,165 @@ R23    |e0/2  |IPv4          |10.10.2.14/30                 |10.10.2.12/30
 R23    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::23:2/64  |20FF:0DB8:ACAD:4014::/64
 
 ### Часть 1. Настроить фильтрацию в офисе Москва так, чтобы не появилось транзитного трафика(As-path).  
+
+Для начала посмотрим какие префиксы AS 1001(Москва)R14 анонсирует соседу AS 101(Киторн)R22:
+```
+R14#sh ip bgp neighbors 50.50.1.29 advertised-routes
+BGP table version is 60, local router ID is 10.1.1.3
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      0.0.0.0                  0         32768 i
+ *>  10.1.1.5/32      10.1.2.34               11         32768 i
+ *>  10.1.1.16/29     10.1.2.10               20         32768 ?
+ *>  10.1.2.0/30      0.0.0.0                  0         32768 ?
+ *>  10.1.2.8/30      0.0.0.0                  0         32768 ?
+ *>  10.1.2.12/30     0.0.0.0                  0         32768 ?
+ *>  10.1.2.16/30     10.1.2.10               20         32768 ?
+ *>  10.1.2.24/30     10.1.2.14               20         32768 ?
+ *>  10.1.2.28/30     10.1.2.34               20         32768 ?
+ *>  10.1.2.32/30     0.0.0.0                  0         32768 ?
+ *>  10.1.2.36/30     10.1.2.10               20         32768 ?
+ *>  10.1.3.0/28      10.1.2.10               20         32768 ?
+ *>  10.1.3.16/28     10.1.2.14               20         32768 ?
+ *>i 10.2.1.0/28      10.1.1.5                 0    150      0 301 520 2042 i
+ *>i 10.2.1.16/29     10.1.1.5                 0    150      0 301 520 2042 i
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>i 10.2.3.0/28      10.1.1.5                 0    150      0 301 520 2042 i
+ *>i 10.2.3.16/28     10.1.1.5                 0    150      0 301 520 2042 i
+ *>i 10.10.1.2/32     10.1.1.5                 0    150      0 301 520 ?
+ *>i 10.10.1.3/32     10.1.1.5                 0    150      0 301 520 i
+ *>i 10.10.1.4/32     10.1.1.5                 0    150      0 301 520 ?
+ *>i 10.10.1.5/32     10.1.1.5                 0    150      0 301 520 ?
+ *>i 10.10.2.0/30     10.1.1.5                 0    150      0 301 520 ?
+ *>i 10.10.2.4/30     10.1.1.5                 0    150      0 301 520 ?
+
+Total number of prefixes 23
+```
+Как видно мы анонсируем не только префиксы нашей AS (10.1.0.0/16), так что теоретически можем стать транзитной AS.
+Во первых необходимо создать as-path access-list, условиями которого будут только маршруты с пустым значением as-path (так как значение с каким либо значением AS-path оригинировались не в исходной AS):
+```
+R14(config)#do sh run | sec as-path
+ip as-path access-list 1 permit ^$
+ip as-path access-list 1 deny .*
+```
+Применим созданный acl к вновь созданному route-map и назначим его соседу AS 101(Киторн)R22:
+```
+R14#sh run | section route-map
+ neighbor 10.1.1.5 route-map SETLOCAL150 in
+ neighbor 50.50.1.29 route-map NOTRANSAS out
+route-map SETLOCAL150 permit 10
+ set local-preference 150
+route-map NOTRANSAS permit 10
+ match as-path 1
+```
+После этого еще раз посмотрим какие префиксы мы анонсируем:  
+```
+R14#sh ip bgp neighbors 50.50.1.29 advertised-routes
+BGP table version is 80, local router ID is 10.1.1.3
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      0.0.0.0                  0         32768 i
+ *>  10.1.1.5/32      10.1.2.34               11         32768 i
+ *>  10.1.1.16/29     10.1.2.10               20         32768 ?
+ *>  10.1.2.0/30      0.0.0.0                  0         32768 ?
+ *>  10.1.2.8/30      0.0.0.0                  0         32768 ?
+ *>  10.1.2.12/30     0.0.0.0                  0         32768 ?
+ *>  10.1.2.16/30     10.1.2.10               20         32768 ?
+ *>  10.1.2.24/30     10.1.2.14               20         32768 ?
+ *>  10.1.2.28/30     10.1.2.34               20         32768 ?
+ *>  10.1.2.32/30     0.0.0.0                  0         32768 ?
+ *>  10.1.2.36/30     10.1.2.10               20         32768 ?
+ *>  10.1.3.0/28      10.1.2.10               20         32768 ?
+ *>  10.1.3.16/28     10.1.2.14               20         32768 ?
+```
+Как видно мы анонсируем только префиксы нашей AS (10.1.0.0/16).  
+Для выполнения задания аналогичную настройку выполним и на R15:  
+```
+R15#sh run | section route-map
+ neighbor 50.50.1.37 route-map NOTRANSAS out
+route-map NOTRANSAS permit 10
+ match as-path 1
+```
+### Часть 2. Настроить фильтрацию в офисе С.-Петербург так, чтобы не появилось транзитного трафика(Prefix-list).  
+Посмотрим какие префиксы анонсирует AS 2042(СПб)R18:
+```
+R18#sh ip bgp neighbors 50.50.1.9 advertised-routes
+BGP table version is 132, local router ID is 10.2.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.1.1.3/32      50.50.1.13                             0 520 301 1001 i
+ *>  10.1.1.5/32      50.50.1.13                             0 520 301 1001 i
+ *>  10.1.1.16/29     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.0/30      50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.8/30      50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.12/30     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.16/30     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.24/30     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.28/30     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.32/30     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.2.36/30     50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.3.0/28      50.50.1.13                             0 520 301 1001 ?
+ *>  10.1.3.16/28     50.50.1.13                             0 520 301 1001 ?
+ *>  10.2.1.0/28      0.0.0.0                  0         32768 i
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.2.1.16/29     10.2.2.1           1536000         32768 i
+ *>  10.2.3.0/28      10.2.2.1           1536000         32768 i
+ *>  10.2.3.16/28     10.2.2.6           1536000         32768 i
+ *>  10.10.1.2/32     50.50.1.13                             0 520 ?
+ *>  10.10.1.3/32     50.50.1.9                0             0 520 i
+ *>  10.10.1.4/32     50.50.1.13                             0 520 ?
+ *>  10.10.1.5/32     50.50.1.13                             0 520 ?
+ *>  10.10.2.0/30     50.50.1.13                             0 520 ?
+ *>  10.10.2.4/30     50.50.1.13                             0 520 ?
+
+Total number of prefixes 23
+```
+Как видно мы анонсируем не только префиксы нашей AS (10.2.0.0/16).  
+По условию задания необходимо чтобы анонсировались только сети оригинированные в данной AS c помощью prefix-list.  
+Создадим необходимый prefix-list и привяжем его к route-map, и в дальнейшем назначим этот route-map на соседей:  
+```
+R18#sh run | s prefix-list
+ip prefix-list 1 seq 5 permit 10.2.0.0/16 ge 17
+ match ip address prefix-list 1
+
+R18#sh run | s route-map
+ neighbor 50.50.1.9 route-map NOTRANSAS out
+ neighbor 50.50.1.13 route-map NOTRANSAS out
+route-map NOTRANSAS permit 10
+ match ip address prefix-list 1
+```
+После этого еще раз посмотрим какие префиксы мы анонсируем:  
+```
+R18#sh ip bgp neighbors 50.50.1.9 advertised-routes
+BGP table version is 132, local router ID is 10.2.1.2
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>  10.2.1.0/28      0.0.0.0                  0         32768 i
+ *>  10.2.1.16/29     10.2.2.1           1536000         32768 i
+ *>  10.2.3.0/28      10.2.2.1           1536000         32768 i
+ *>  10.2.3.16/28     10.2.2.6           1536000         32768 i
+
+Total number of prefixes 4
+```
+Как видно мы анонсируем только префиксы нашей AS (10.2.0.0/16). 
+
