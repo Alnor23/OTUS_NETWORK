@@ -263,4 +263,87 @@ icmp 50.50.1.22:22945  10.3.3.18:22945    50.50.1.21:22945   50.50.1.21:22945
 icmp 50.50.1.22:23201  10.3.3.18:23201    50.50.1.21:23201   50.50.1.21:23201
 icmp 50.50.1.22:23457  10.3.3.18:23457    50.50.1.21:23457   50.50.1.21:23457
 ```
-### Часть 5. Настройте для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.
+### Часть 5. Настройте для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.  
+В данном задании R12 будет настроен как DHCP сервер для VPC1(10.1.3.0/28), а R13 для VPC7(10.1.3.16/28):  
+Настройка R12:  
+```
+R12(config)#do sh run | sec dhcp
+ip dhcp excluded-address 10.1.3.1
+ip dhcp pool VPC1_client
+ network 10.1.3.0 255.255.255.240
+ default-router 10.1.3.1
+```
+Настройка R13:  
+```
+R13(config)#do sh run | sec dhcp
+ip dhcp excluded-address 10.1.3.17
+ip dhcp pool VPC7_client
+ network 10.1.3.16 255.255.255.240
+ default-router 10.1.3.17
+```
+Проверка VPC1:  
+```
+VPCS> ip dhcp
+DDORA IP 10.1.3.3/28 GW 10.1.3.1
+
+VPCS> sh ip
+
+NAME        : VPCS[1]
+IP/MASK     : 10.1.3.3/28
+GATEWAY     : 10.1.3.1
+DNS         :
+DHCP SERVER : 10.1.3.1
+DHCP LEASE  : 86391, 86400/43200/75600
+MAC         : 00:50:79:66:68:01
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+```
+Проверка VPC7:  
+```
+VPCS> ip dhcp
+DDORA IP 10.1.3.19/28 GW 10.1.3.17
+
+VPCS> sh ip
+
+NAME        : VPCS[1]
+IP/MASK     : 10.1.3.19/28
+GATEWAY     : 10.1.3.17
+DNS         :
+DHCP SERVER : 10.1.3.17
+DHCP LEASE  : 86390, 86400/43200/75600
+MAC         : 00:50:79:66:68:07
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+```
+
+### Часть 6. Настройте NTP сервер на R12 и R13. Все устройства в офисе Москва должны синхронизировать время с R12 и R13.   
+Настроим устройства R12 и R13 как NTP сервера:  
+```
+R12(config)#ntp master 10
+R12(config)#int range e0/0-3, lo1
+R12(config-if-range)#ntp broadcast
+```
+(На R13 настройка аналогичная).  
+Далее на клиентах укажем сервера (в качестве адресов сервера используются loopback интерфейсы):  
+```
+R14#sh run | sec ntp
+ntp server 10.1.1.4
+ntp server 10.1.1.6
+```
+Выполним проверку:  
+```
+R14#sh ntp associations
+
+  address         ref clock       st   when   poll reach  delay  offset   disp
+ ~10.1.1.4        127.127.1.1     10     28     64     0  0.000   0.000 15937.
+ ~10.1.1.6        127.127.1.1     10     26     64     0  0.000   0.000 15937.
+ * sys.peer, # selected, + candidate, - outlyer, x falseticker, ~ configured
+```
+_______
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab12_baseprot/config)
+
+
+
+
