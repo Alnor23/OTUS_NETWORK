@@ -167,5 +167,67 @@ icmp 50.50.1.10:32437  10.2.3.2:32437     50.50.1.9:32437    50.50.1.9:32437
 icmp 50.50.1.10:32693  10.2.3.2:32693     50.50.1.9:32693    50.50.1.9:32693
 icmp 50.50.1.10:32949  10.2.3.2:32949     50.50.1.9:32949    50.50.1.9:32949
 ```
+### Часть 3. Настройте статический NAT для R20.  
+Для настройки статического NAT с дальнейшей демонстрации его работы и так как R20 является тупиковым роутером, NAT будет настроен на трансляцию адреса loopback(10.1.1.7) через адрес интерфейса(10.1.2.30).  
+Сначало настроим интерфейсы:  
+```
+R20(config)#int e0/0
+R20(config-if)#ip nat outside
+R20(config)#int lo1
+R20(config-if)#ip nat inside
+```
+Затем мы настраиваем трансляцию: 
+```
+R20(config)#do sh run | sec ip nat
+ip nat inside source static 10.1.1.7 10.1.2.30
+```
+Для проверки выполним запрос с адреса loopback(10.1.1.7) на любой адрес внутри AS:  
+```
+R20#ping 10.1.2.34 source 10.1.1.7
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 10.1.2.34, timeout is 2 seconds:
+Packet sent with a source address of 10.1.1.7
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms
+```
+Затем выполним просмотр трансляций:  
+```
+R20#sh ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+icmp 10.1.2.30:5       10.1.1.7:5         10.1.2.34:5        10.1.2.34:5
+--- 10.1.2.30          10.1.1.7           ---                ---
+```
+### Часть  4. Настройте NAT так, чтобы R19 был доступен с любого узла для удаленного управления.  
+Для выполнения этого задания создадим на R15 loopback интерфейс:  
+```
+interface Loopback2
+ ip address 50.50.1.100 255.255.255.255
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+end
+```
+Дальше создадим статический NAT (который транслирует адрес loopback интерфейса R19 во внешний адрес):  
+```
+R15#sh run | s nat
+ip nat inside source static 10.1.1.2 50.50.1.100
+```
+Затем выполним попытку подключения по telnet к R19 c устройства R18 (находящемся в AS 2042 СПБ):  
+```
+R18#telnet 50.50.1.100 /source-interface lo1
+Trying 50.50.1.100 ... Open
 
+
+User Access Verification
+
+Username: cisco
+Password:
+R19>
+R19>exit
+
+[Connection to 50.50.1.100 closed by foreign host]
+```
+Видно что подключение по telnet выполнено.  
+
+### Часть 5*. Настройте статический NAT(PAT) для офиса Чокурдах.
+`ОФФТОП: из текста задания не понял что необходимо сделать статический NAT или PAT, для выполнения задания выбрал настройку PAT`   
 
