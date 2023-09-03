@@ -105,7 +105,7 @@ R23    |e0/2  |IPv4          |10.10.2.14/30                 |10.10.2.12/30
 R23    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::23:2/64  |20FF:0DB8:ACAD:4014::/64
 
 ### Часть 1. Настройте GRE между офисами Москва и С.-Петербург.  
-В данном задании необходимо настроить GRE между R15 и R18.  
+В данном задании необходимо настроить GRE между R15(Москва) и R18(С.-Петербург).  
 Настроим соответствующим образом утройства:  
 R15:  
 ```
@@ -151,4 +151,89 @@ Loopback1                  10.2.1.2        YES NVRAM  up                    up
 NVI0                       10.2.2.5        YES unset  up                    up
 Tunnel1                    10.1.5.2        YES manual up                    up
 ```
-### Часть 2. Настройте DMVPN между Москва и Чокурдах, Лабытнанги.
+### Часть 2. Настройте DMVPN между Москва и Чокурдах, Лабытнанги.   
+В данном задании необходимо настроить DMVPN между R14(Москва) и R27(Лабытнанги), R28(Чокурдах)co.  
+Сначала настроим R14(Москва) он будет выступать в роли хаба:  
+```
+R14#sh run int tun 1
+Building configuration...
+
+Current configuration : 184 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.2 255.255.255.0
+ no ip redirects
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 1
+ tunnel source 50.50.1.30
+ tunnel mode gre multipoint
+end
+```
+Затем настроим R27(Лабытнанги), R28(Чокурдах) в роли SPOKE:  
+R27:  
+```
+R27#sh run int tu 1
+Building configuration...
+
+Current configuration : 228 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.4 255.255.255.0
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ tunnel source 50.50.1.26
+ tunnel destination 50.50.1.30
+end
+```
+R28:
+```
+R28#sh run int tu1
+Building configuration...
+
+Current configuration : 228 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.3 255.255.255.0
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ tunnel source 50.50.1.22
+ tunnel destination 50.50.1.30
+end
+```
+Выполним проверку работоспособности DMVPN:  
+```
+R14#sh dmvpn
+Legend: Attrb --> S - Static, D - Dynamic, I - Incomplete
+        N - NATed, L - Local, X - No Socket
+        T1 - Route Installed, T2 - Nexthop-override
+        C - CTS Capable
+        # Ent --> Number of NHRP entries with same NBMA peer
+        NHS Status: E --> Expecting Replies, R --> Responding, W --> Waiting
+        UpDn Time --> Up or Down Time for a Tunnel
+==========================================================================
+
+Interface: Tunnel1, IPv4 NHRP Details
+Type:Hub, NHRP Peers:2,
+
+ # Ent  Peer NBMA Addr Peer Tunnel Add State  UpDn Tm Attrb
+ ----- --------------- --------------- ----- -------- -----
+     1 50.50.1.22             10.1.7.3    UP 00:00:45     D
+     1 50.50.1.26             10.1.7.4    UP 00:00:48     D
+
+R14#sh ip nhrp
+10.1.7.3/32 via 10.1.7.3
+   Tunnel1 created 00:00:54, expire 01:59:06
+   Type: dynamic, Flags: unique registered used nhop
+   NBMA address: 50.50.1.22
+10.1.7.4/32 via 10.1.7.4
+   Tunnel1 created 00:00:58, expire 01:59:02
+   Type: dynamic, Flags: unique registered used nhop
+   NBMA address: 50.50.1.26
+
+```
+  _______
+  - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab13_vpn/config)
