@@ -104,4 +104,51 @@ R24    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::24:2/64  |20FF:0DB8:ACAD:4014
 R23    |e0/2  |IPv4          |10.10.2.14/30                 |10.10.2.12/30
 R23    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::23:2/64  |20FF:0DB8:ACAD:4014::/64
 
-### Часть 1. Настройте GRE между офисами Москва и С.-Петербург.
+### Часть 1. Настройте GRE между офисами Москва и С.-Петербург.  
+В данном задании необходимо настроить GRE между R15 и R18.  
+Настроим соответствующим образом утройства:  
+R15:  
+```
+R15#sh run int tunnel 1
+Building configuration...
+
+Current configuration : 171 bytes
+!
+interface Tunnel1
+ ip address 10.1.5.1 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source 50.50.1.38
+ tunnel destination 50.50.1.10
+end
+```
+R18:  
+```
+R18#sh run int tunnel 1
+Building configuration...
+
+Current configuration : 171 bytes
+!
+interface Tunnel1
+ ip address 10.1.5.2 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source 50.50.1.10
+ tunnel destination 50.50.1.38
+end
+```
+Выполним проверку работоспособности туннеля:  
+```
+R18#sh ip int brief
+Interface                  IP-Address      OK? Method Status                Protocol
+Ethernet0/0                10.2.2.5        YES NVRAM  up                    up
+Ethernet0/1                10.2.2.2        YES NVRAM  up                    up
+Ethernet0/2                50.50.1.10      YES NVRAM  up                    up
+Ethernet0/3                50.50.1.14      YES NVRAM  up                    up
+Loopback1                  10.2.1.2        YES NVRAM  up                    up
+NVI0                       10.2.2.5        YES unset  up                    up
+Tunnel1                    10.1.5.2        YES manual up                    up
+```
+### Часть 2. Настройте DMVPN между Москва и Чокурдах, Лабытнанги.
