@@ -163,7 +163,7 @@ ip nat pool pool1 50.50.21.2 50.50.21.6 netmask 255.255.255.248
 R18#sh run | s nat
  ip nat inside source list 1 pool pool1
 ```
-Для проверки выполним icmp запрос из AS 2042(VPC8) на внешние адреса а затем выполним просмотр трансляций на R18:  
+Для проверки выполним icmp запрос из AS 2042 на внешние адреса а затем выполним просмотр трансляций на R18:  
 ```
 R18#sh ip nat translations
 Pro Inside global      Inside local       Outside local      Outside global
