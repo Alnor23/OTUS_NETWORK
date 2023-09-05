@@ -249,8 +249,64 @@ icmp 50.50.1.22:23201  10.3.3.18:23201    50.50.1.21:23201   50.50.1.21:23201
 icmp 50.50.1.22:23457  10.3.3.18:23457    50.50.1.21:23457   50.50.1.21:23457
 ```
 ### Часть 5. Настройте для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.  
-В данном задании половина оба пула для VPC будут разбиты на два та 
-Настройка R12:  
+В данном задании на каждом маршрутизаторе будут подняты оба DHCP пула для клиентов, также будет настроен VRRP:      
+Настройка VRRP R12:  
+```
+R12#sh run int e0/0.11
+Building configuration...
+
+Current configuration : 198 bytes
+!
+interface Ethernet0/0.11
+ encapsulation dot1Q 11
+ ip address 10.1.3.1 255.255.255.240
+ vrrp 11 ip 10.1.3.3
+ vrrp 11 priority 120
+ vrrp 11 track 1 decrement 100
+ vrrp 11 track 2 decrement 100
+end
+
+R12#sh run int e0/0.12
+Building configuration...
+
+Current configuration : 162 bytes
+!
+interface Ethernet0/0.12
+ encapsulation dot1Q 12
+ vrrp 12 ip 10.1.3.19
+ vrrp 12 priority 150
+ vrrp 12 track 1 decrement 100
+ vrrp 12 track 2 decrement 100
+end
+
+R12#sh run | s track
+track 1 interface Ethernet0/2 line-protocol
+track 2 interface Ethernet0/3 line-protocol
+```
+Настройка VRRP R13:  
+```
+R13#sh run int e0/0.11
+Building configuration...
+
+Current configuration : 114 bytes
+!
+interface Ethernet0/0.11
+ encapsulation dot1Q 11
+ ip address 10.1.3.2 255.255.255.240
+ vrrp 11 ip 10.1.3.3
+end
+
+R13#sh run int e0/0.12
+Building configuration...
+
+Current configuration : 116 bytes
+!
+interface Ethernet0/0.12
+ encapsulation dot1Q 12
+ ip address 10.1.3.17 255.255.255.240
+ vrrp 12 ip 10.1.3.19
+end
+```
 ```
 R12(config)#do sh run | sec dhcp
 ip dhcp excluded-address 10.1.3.1
@@ -258,51 +314,70 @@ ip dhcp pool VPC1_client
  network 10.1.3.0 255.255.255.240
  default-router 10.1.3.1
 ```
-Настройка R13:  
+Далее настроим DНCP.
+Настройка R12:  
 ```
-R13(config)#do sh run | sec dhcp
-ip dhcp excluded-address 10.1.3.17
-ip dhcp pool VPC7_client
+R12#sh run | s dhcp
+ip dhcp excluded-address 10.1.3.1 10.1.3.3
+ip dhcp excluded-address 10.1.3.9 10.1.3.14
+ip dhcp excluded-address 10.1.3.17 10.1.3.18
+ip dhcp excluded-address 10.1.3.17 10.1.3.19
+ip dhcp excluded-address 10.1.3.20 10.1.3.25
+ip dhcp pool vpc1_cli
+ network 10.1.3.0 255.255.255.240
+ default-router 10.1.3.3
+ip dhcp pool vpc7_cli
  network 10.1.3.16 255.255.255.240
- default-router 10.1.3.17
+ default-router 10.1.3.19s
 ```
-Проверка VPC1:  
+Настройка R13: 
+```
+R13#sh run | s dhcp
+ip dhcp excluded-address 10.1.3.1 10.1.3.3
+ip dhcp excluded-address 10.1.3.17 10.1.3.19
+ip dhcp excluded-address 10.1.3.4 10.1.3.6
+ip dhcp excluded-address 10.1.3.26 10.1.3.30
+ip dhcp pool vpc1_cli
+ network 10.1.3.0 255.255.255.240
+ default-router 10.1.3.3
+ip dhcp pool vpc7_cli
+ network 10.1.3.16 255.255.255.240
+ default-router 10.1.3.19
+```
+Проверка VPC1 (при отключении одного из маршрутизаторов):  
 ```
 VPCS> ip dhcp
-DDORA IP 10.1.3.3/28 GW 10.1.3.1
+DORA IP 10.1.3.4/28 GW 10.1.3.3
 
 VPCS> sh ip
 
 NAME        : VPCS[1]
-IP/MASK     : 10.1.3.3/28
-GATEWAY     : 10.1.3.1
+IP/MASK     : 10.1.3.4/28
+GATEWAY     : 10.1.3.3
 DNS         :
 DHCP SERVER : 10.1.3.1
-DHCP LEASE  : 86391, 86400/43200/75600
+DHCP LEASE  : 86201, 86400/43200/75600
+MAC         : 00:50:79:66:68:01
+LPORT       : 20000
+RHOST:PORT  : 127.0.0.1:30000
+MTU         : 1500
+
+VPCS> ip dhcp
+DORA IP 10.1.3.7/28 GW 10.1.3.3
+
+VPCS> sh ip
+
+NAME        : VPCS[1]
+IP/MASK     : 10.1.3.7/28
+GATEWAY     : 10.1.3.3
+DNS         :
+DHCP SERVER : 10.1.3.2
+DHCP LEASE  : 86395, 86400/43200/75600
 MAC         : 00:50:79:66:68:01
 LPORT       : 20000
 RHOST:PORT  : 127.0.0.1:30000
 MTU         : 1500
 ```
-Проверка VPC7:  
-```
-VPCS> ip dhcp
-DDORA IP 10.1.3.19/28 GW 10.1.3.17
-
-VPCS> sh ip
-
-NAME        : VPCS[1]
-IP/MASK     : 10.1.3.19/28
-GATEWAY     : 10.1.3.17
-DNS         :
-DHCP SERVER : 10.1.3.17
-DHCP LEASE  : 86390, 86400/43200/75600
-MAC         : 00:50:79:66:68:07
-LPORT       : 20000
-RHOST:PORT  : 127.0.0.1:30000
-MTU         : 1500
-```
-
 ### Часть 6. Настройте NTP сервер на R12 и R13. Все устройства в офисе Москва должны синхронизировать время с R12 и R13.   
 Настроим устройства R12 и R13 как NTP сервера:  
 ```
