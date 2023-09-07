@@ -311,7 +311,7 @@ ip dhcp pool VPC1_client
  network 10.1.3.0 255.255.255.240
  default-router 10.1.3.1
 ```
-Далее настроим DНCP.
+Далее настроим DНCP.  
 Настройка R12:  
 ```
 R12#sh run | s dhcp
