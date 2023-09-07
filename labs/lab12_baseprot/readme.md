@@ -219,6 +219,10 @@ R19>exit
 ```
 R28(config)#int e0/1
 R28(config-if)#ip nat outside
+R28(config-subif)#ex
+R28(config)#int e0/0
+R28(config-if)#ip nat outside
+R28(config-subif)#ex
 R28(config)#int e0/2.30
 R28(config-subif)#ip nat inside
 R28(config-subif)#ex
@@ -240,13 +244,6 @@ ip nat inside source list 1 interface Ethernet0/1 overload
 ```
 Для проверки выполним icmp запрос из AS 2042(VPC8) на внешние адреса а затем выполним просмотр трансляций на R18:  
 ```
-R28#sh ip nat translations
-Pro Inside global      Inside local       Outside local      Outside global
-icmp 50.50.1.22:22433  10.3.3.18:22433    50.50.1.21:22433   50.50.1.21:22433
-icmp 50.50.1.22:22689  10.3.3.18:22689    50.50.1.21:22689   50.50.1.21:22689
-icmp 50.50.1.22:22945  10.3.3.18:22945    50.50.1.21:22945   50.50.1.21:22945
-icmp 50.50.1.22:23201  10.3.3.18:23201    50.50.1.21:23201   50.50.1.21:23201
-icmp 50.50.1.22:23457  10.3.3.18:23457    50.50.1.21:23457   50.50.1.21:23457
 ```
 ### Часть 5. Настройте для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.  
 В данном задании на каждом маршрутизаторе будут подняты оба DHCP пула для клиентов, также будет настроен VRRP:      
@@ -382,8 +379,6 @@ MTU         : 1500
 Настроим устройства R12 и R13 как NTP сервера:  
 ```
 R12(config)#ntp master 10
-R12(config)#int range e0/0-3, lo1
-R12(config-if-range)#ntp broadcast
 ```
 (На R13 настройка аналогичная).  
 Далее на клиентах укажем сервера (в качестве адресов сервера используются loopback интерфейсы):  
@@ -397,9 +392,8 @@ ntp server 10.1.1.6
 R14#sh ntp associations
 
   address         ref clock       st   when   poll reach  delay  offset   disp
- ~10.1.1.4        127.127.1.1     10     28     64     0  0.000   0.000 15937.
- ~10.1.1.6        127.127.1.1     10     26     64     0  0.000   0.000 15937.
- * sys.peer, # selected, + candidate, - outlyer, x falseticker, ~ configured
+*~10.1.1.4        127.127.1.1     10    597   1024   377  0.000   0.000  2.003
++~10.1.1.6        127.127.1.1     10    741   1024   377  0.000   0.000  1.990
 ```
 _______
   - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab12_baseprot/config)
