@@ -1,9 +1,9 @@
 R28#sh run
 Building configuration...
 
-Current configuration : 2728 bytes
+Current configuration : 3517 bytes
 !
-! Last configuration change at 14:19:14 UTC Thu Aug 31 2023
+! Last configuration change at 13:05:27 UTC Fri Sep 8 2023
 !
 version 15.5
 service timestamps debug datetime msec
@@ -65,7 +65,10 @@ redundancy
 !
 !
 track 1 ip sla 1 reachability
- delay down 10 up 10
+ delay down 1 up 1
+!
+track 2 ip sla 2 reachability
+ delay down 1 up 1
 !
 !
 !
@@ -86,9 +89,21 @@ interface Loopback1
  ipv6 address FE80::28 link-local
  ipv6 enable
 !
+interface Tunnel1
+ ip address 10.1.7.3 255.255.255.0
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ shutdown
+ tunnel source 50.50.1.22
+ tunnel destination 50.50.1.30
+!
 interface Ethernet0/0
  description to R26
  ip address 50.50.1.18 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly in
  ipv6 address FE80::28 link-local
  ipv6 address 20FF:DB8:ACAD:7005::28:0/64
  ipv6 enable
@@ -153,9 +168,10 @@ ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
-ip nat inside source list 1 interface Ethernet0/1 overload
-ip route 0.0.0.0 0.0.0.0 50.50.1.17 20 track 1
-ip route 0.0.0.0 0.0.0.0 50.50.1.21 21
+ip nat inside source route-map NAT1 interface Ethernet0/0 overload
+ip nat inside source route-map NAT2 interface Ethernet0/1 overload
+ip route 0.0.0.0 0.0.0.0 50.50.1.17 track 1
+ip route 0.0.0.0 0.0.0.0 50.50.1.21 track 2
 !
 ip access-list standard VLAN_31
  permit 10.3.3.0 0.0.0.15
@@ -165,17 +181,30 @@ ip access-list standard VLAN_32
 ip sla 1
  icmp-echo 50.50.1.17 source-ip 50.50.1.18
 ip sla schedule 1 life forever start-time now
+ip sla 2
+ icmp-echo 50.50.1.21 source-ip 50.50.1.22
+ip sla schedule 2 life forever start-time now
 !
 route-map PBR permit 10
  match ip address VLAN_31
- set ip next-hop 50.50.1.17
+ set ip next-hop verify-availability 50.50.1.17 1 track 1
 !
 route-map PBR permit 20
  match ip address VLAN_32
- set ip next-hop 50.50.1.21
+ set ip next-hop verify-availability 50.50.1.21 1 track 2
+!
+route-map NAT2 permit 10
+ match ip address 1
+ match interface Ethernet0/1
+!
+route-map NAT1 permit 10
+ match ip address 2
+ match interface Ethernet0/0
 !
 !
 access-list 1 permit 10.3.0.0 0.0.255.255
+access-list 2 permit 10.3.3.0 0.0.0.15
+access-list 3 permit 10.3.3.16 0.0.0.15
 !
 control-plane
 !
