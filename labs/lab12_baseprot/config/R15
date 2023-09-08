@@ -1,9 +1,9 @@
 R15#sh run
 Building configuration...
 
-Current configuration : 3991 bytes
+Current configuration : 4374 bytes
 !
-! Last configuration change at 20:39:59 UTC Thu Aug 31 2023
+! No configuration change since last restart
 !
 version 15.5
 service timestamps debug datetime msec
@@ -90,6 +90,19 @@ interface Loopback2
  ip address 50.50.1.100 255.255.255.255
  ip ospf network point-to-point
  ip ospf 1 area 0
+!
+interface Loopback3
+ ip address 50.50.1.99 255.255.255.255
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface Tunnel1
+ ip address 10.1.5.1 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source 50.50.1.38
+ tunnel destination 50.50.1.10
 !
 interface Ethernet0/0
  ip address 10.1.2.26 255.255.255.252
@@ -180,10 +193,12 @@ router ospf 1
  no passive-interface Ethernet1/0
  no passive-interface Loopback1
  no passive-interface Loopback2
+ no passive-interface Loopback3
 !
 router bgp 1001
  bgp router-id 10.1.1.5
  bgp log-neighbor-changes
+ network 50.50.1.36 mask 255.255.255.252
  neighbor 10.1.1.3 remote-as 1001
  neighbor 10.1.1.3 update-source Loopback1
  neighbor 10.1.1.3 next-hop-self
@@ -199,6 +214,7 @@ ip as-path access-list 1 deny .*
 no ip http server
 no ip http secure-server
 ip nat inside source list 1 interface Ethernet0/2 overload
+ip nat inside source static 10.1.1.7 50.50.1.99
 ip nat inside source static 10.1.1.2 50.50.1.100
 !
 !
