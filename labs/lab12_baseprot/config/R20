@@ -1,9 +1,9 @@
 R20#sh run
 Building configuration...
 
-Current configuration : 1865 bytes
+Current configuration : 1772 bytes
 !
-! Last configuration change at 20:40:48 UTC Thu Aug 31 2023
+! No configuration change since last restart
 !
 version 15.5
 service timestamps debug datetime msec
@@ -80,7 +80,6 @@ redundancy
 interface Loopback1
  description manage
  ip address 10.1.1.7 255.255.255.255
- ip nat inside
  ip virtual-reassembly in
  ip ospf network point-to-point
  ip ospf 1 area 102
@@ -92,7 +91,6 @@ interface Loopback1
 interface Ethernet0/0
  description to r15
  ip address 10.1.2.30 255.255.255.252
- ip nat outside
  ip virtual-reassembly in
  ip ospf 1 area 102
  ipv6 address FE80::20 link-local
@@ -131,7 +129,6 @@ ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
-ip nat inside source static 10.1.1.7 10.1.2.30
 !
 !
 !
