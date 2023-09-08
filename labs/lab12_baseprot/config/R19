@@ -1,9 +1,9 @@
 R19#sh run
 Building configuration...
 
-Current configuration : 1826 bytes
+Current configuration : 1811 bytes
 !
-! Last configuration change at 20:38:58 UTC Thu Aug 31 2023
+! No configuration change since last restart
 !
 version 15.5
 service timestamps debug datetime msec
