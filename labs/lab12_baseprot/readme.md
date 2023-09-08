@@ -251,22 +251,56 @@ ip sla schedule 2 life forever start-time now
 ```
 Затем создаем track обьекты:  
 ```
-R28#sh run | sec track
+R28#sh run | sec track1
 track 1 ip sla 1 reachability
  delay down 1 up 1
 track 2 ip sla 2 reachability
  delay down 1 up 1
 ```
-И прявязываем эти обьекты к маршрутам по умолчанию(чтобы мыршрут по умолчанию уходил из таблицы при срабатывании SLA):
+И прявязываем эти обьекты к маршрутам по умолчанию(чтобы мыршрут по умолчанию уходил из таблицы при срабатывании SLA):  
 ```
 ip route 0.0.0.0 0.0.0.0 50.50.1.17 track 1
 ip route 0.0.0.0 0.0.0.0 50.50.1.21 track 2
 ```
-Затем мы настраиваем трансляцию:  
+Создадим route-map для распределения трафика между линками на основании source сети, а также сразу создадим route-map для указаний NAT`у:  
 ```
-R28(config)#do sh run | s ip nat
-ip nat inside source list 1 interface Ethernet0/1 overload
+R28#sh run | s route-map
+route-map PBR permit 10
+ match ip address VLAN_31
+ set ip next-hop verify-availability 50.50.1.17 1 track 1
+route-map PBR permit 20
+ match ip address VLAN_32
+ set ip next-hop verify-availability 50.50.1.21 1 track 2
+route-map NAT2 permit 10
+ match ip address 1
+ match interface Ethernet0/1
+route-map NAT1 permit 10
+ match ip address 2
+ match interface Ethernet0/0
+
 ```
+Затем мы настраиваем трансляции:   
+```
+R28(config)#do sh run | s nat inside
+ip nat inside source route-map NAT1 interface Ethernet0/0 overload
+ip nat inside source route-map NAT2 interface Ethernet0/1 overload
+```
+Выполним проверку:  
+```
+R28#sh ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+icmp 50.50.1.18:14107  10.3.3.2:14107     50.50.1.17:14107   50.50.1.17:14107
+icmp 50.50.1.18:14363  10.3.3.2:14363     50.50.1.17:14363   50.50.1.17:14363
+icmp 50.50.1.18:14619  10.3.3.2:14619     50.50.1.17:14619   50.50.1.17:14619
+icmp 50.50.1.18:14875  10.3.3.2:14875     50.50.1.17:14875   50.50.1.17:14875
+icmp 50.50.1.18:15131  10.3.3.2:15131     50.50.1.17:15131   50.50.1.17:15131
+icmp 50.50.1.22:15131  10.3.3.18:15131    50.50.1.21:15131   50.50.1.21:15131
+icmp 50.50.1.22:15387  10.3.3.18:15387    50.50.1.21:15387   50.50.1.21:15387
+icmp 50.50.1.22:15643  10.3.3.18:15643    50.50.1.21:15643   50.50.1.21:15643
+icmp 50.50.1.22:15899  10.3.3.18:15899    50.50.1.21:15899   50.50.1.21:15899
+icmp 50.50.1.22:16155  10.3.3.18:16155    50.50.1.21:16155   50.50.1.21:16155
+```
+Видно что каждому VPC присваивается свой внешний IP.  
 ### Часть 5. Настройте для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.  
 В данном задании на каждом маршрутизаторе будут подняты оба DHCP пула для клиентов, также будет настроен VRRP:      
 Настройка VRRP R12:  
