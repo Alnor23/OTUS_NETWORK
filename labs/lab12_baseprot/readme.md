@@ -232,15 +232,36 @@ R28(config-subif)#int e0/2.32
 R28(config-subif)#ip nat inside
 R28(config-subif)#end
 ```
-Далее создается access-list в который входят все адреса Чокурдах (10.3.0.0/16):  
+Далее создается access-list в который входят все адреса Чокурдах (10.3.0.0/16) также создадим ACL описывающие сети VPC30 и VPC31:  
 ```
-R28(config)#do sh run | sec acc
+R28(config)#do sh run | s access
 access-list 1 permit 10.3.0.0 0.0.255.255
+access-list 2 permit 10.3.3.0 0.0.0.15
+access-list 3 permit 10.3.3.16 0.0.0.15
 ```
-
-
-
-
+Затем настраиваем SLA на мониторинг двух исходящих линков:  
+```
+R28#sh run | sec ip sla
+ip sla 1
+ icmp-echo 50.50.1.17 source-ip 50.50.1.18
+ip sla schedule 1 life forever start-time now
+ip sla 2
+ icmp-echo 50.50.1.21 source-ip 50.50.1.22
+ip sla schedule 2 life forever start-time now
+```
+Затем создаем track обьекты:  
+```
+R28#sh run | sec track
+track 1 ip sla 1 reachability
+ delay down 1 up 1
+track 2 ip sla 2 reachability
+ delay down 1 up 1
+```
+И прявязываем эти обьекты к маршрутам по умолчанию(чтобы мыршрут по умолчанию уходил из таблицы при срабатывании SLA):
+```
+ip route 0.0.0.0 0.0.0.0 50.50.1.17 track 1
+ip route 0.0.0.0 0.0.0.0 50.50.1.21 track 2
+```
 Затем мы настраиваем трансляцию:  
 ```
 R28(config)#do sh run | s ip nat
