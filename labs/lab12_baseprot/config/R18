@@ -1,9 +1,7 @@
 R18#sh run
 Building configuration...
 
-Current configuration : 3020 bytes
-!
-! Last configuration change at 21:33:28 UTC Wed Aug 30 2023
+Current configuration : 3221 bytes
 !
 version 15.5
 service timestamps debug datetime msec
@@ -79,10 +77,19 @@ redundancy
 !
 interface Loopback1
  description manage
- ip address 10.2.1.2 255.255.255.240
+ ip address 10.2.1.2 255.255.255.255
  ipv6 address FE80::18 link-local
  ipv6 address 20FF:DB8:ACAD:2001::18/64
  ipv6 enable
+!
+interface Tunnel1
+ ip address 10.1.5.2 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ shutdown
+ keepalive 3 3
+ tunnel source 50.50.1.10
+ tunnel destination 50.50.1.38
 !
 interface Ethernet0/0
  description to R16
@@ -151,6 +158,7 @@ router bgp 2042
  bgp log-neighbor-changes
  bgp bestpath as-path multipath-relax
  network 10.2.1.0 mask 255.255.255.240
+ network 10.2.1.2 mask 255.255.255.255
  network 10.2.1.16 mask 255.255.255.248
  network 10.2.3.0 mask 255.255.255.240
  network 10.2.3.16 mask 255.255.255.240
@@ -165,7 +173,8 @@ ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
-ip nat inside source list 1 interface Ethernet0/2 overload
+ip nat pool pool1 50.50.1.81 50.50.1.85 netmask 255.255.255.248
+ip nat inside source list 1 pool pool1
 ip route 0.0.0.0 0.0.0.0 50.50.1.9
 !
 !
@@ -176,7 +185,7 @@ route-map NOTRANSAS permit 10
  match ip address prefix-list 1
 !
 !
-access-list 1 permit 10.2.3.0 0.0.0.7
+access-list 1 permit 10.2.0.0 0.0.255.255
 !
 control-plane
 !
