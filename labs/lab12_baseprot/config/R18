@@ -1,7 +1,9 @@
 R18#sh run
 Building configuration...
 
-Current configuration : 3221 bytes
+Current configuration : 3292 bytes
+!
+! Last configuration change at 20:26:22 UTC Sun Sep 10 2023
 !
 version 15.5
 service timestamps debug datetime msec
@@ -174,7 +176,7 @@ ip forward-protocol nd
 no ip http server
 no ip http secure-server
 ip nat pool pool1 50.50.1.81 50.50.1.85 netmask 255.255.255.248
-ip nat inside source list 1 pool pool1
+ip nat inside source list 1 pool pool1 overload
 ip route 0.0.0.0 0.0.0.0 50.50.1.9
 !
 !
