@@ -160,7 +160,7 @@ ip nat pool pool1 50.50.1.81 50.50.1.85 netmask 255.255.255.248
 Затем мы настраиваем трансляцию:  
 ```
 R18#sh run | s nat
- ip nat inside source list 1 pool pool1
+ ip nat inside source list 1 pool pool1 overload
 ```
 Для проверки выполним icmp запрос из AS 2042 на внешние адреса а затем выполним просмотр трансляций на R18:  
 ```
