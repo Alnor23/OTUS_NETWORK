@@ -272,7 +272,7 @@ route-map PBR permit 20
  match ip address VLAN_32
  set ip next-hop verify-availability 50.50.1.21 1 track 2
 route-map NAT2 permit 10
- match ip address 1
+ match ip address 3
  match interface Ethernet0/1
 route-map NAT1 permit 10
  match ip address 2
@@ -289,16 +289,16 @@ ip nat inside source route-map NAT2 interface Ethernet0/1 overload
 ```
 R28#sh ip nat translations
 Pro Inside global      Inside local       Outside local      Outside global
-icmp 50.50.1.18:14107  10.3.3.2:14107     50.50.1.17:14107   50.50.1.17:14107
-icmp 50.50.1.18:14363  10.3.3.2:14363     50.50.1.17:14363   50.50.1.17:14363
-icmp 50.50.1.18:14619  10.3.3.2:14619     50.50.1.17:14619   50.50.1.17:14619
-icmp 50.50.1.18:14875  10.3.3.2:14875     50.50.1.17:14875   50.50.1.17:14875
-icmp 50.50.1.18:15131  10.3.3.2:15131     50.50.1.17:15131   50.50.1.17:15131
-icmp 50.50.1.22:15131  10.3.3.18:15131    50.50.1.21:15131   50.50.1.21:15131
-icmp 50.50.1.22:15387  10.3.3.18:15387    50.50.1.21:15387   50.50.1.21:15387
-icmp 50.50.1.22:15643  10.3.3.18:15643    50.50.1.21:15643   50.50.1.21:15643
-icmp 50.50.1.22:15899  10.3.3.18:15899    50.50.1.21:15899   50.50.1.21:15899
-icmp 50.50.1.22:16155  10.3.3.18:16155    50.50.1.21:16155   50.50.1.21:16155
+icmp 50.50.1.18:35895  10.3.3.2:35895     50.50.1.17:35895   50.50.1.17:35895
+icmp 50.50.1.18:36151  10.3.3.2:36151     50.50.1.17:36151   50.50.1.17:36151
+icmp 50.50.1.18:36407  10.3.3.2:36407     50.50.1.17:36407   50.50.1.17:36407
+icmp 50.50.1.18:36663  10.3.3.2:36663     50.50.1.17:36663   50.50.1.17:36663
+icmp 50.50.1.18:36919  10.3.3.2:36919     50.50.1.17:36919   50.50.1.17:36919
+icmp 50.50.1.22:36663  10.3.3.18:36663    50.50.1.21:36663   50.50.1.21:36663
+icmp 50.50.1.22:36919  10.3.3.18:36919    50.50.1.21:36919   50.50.1.21:36919
+icmp 50.50.1.22:37175  10.3.3.18:37175    50.50.1.21:37175   50.50.1.21:37175
+icmp 50.50.1.22:37431  10.3.3.18:37431    50.50.1.21:37431   50.50.1.21:37431
+icmp 50.50.1.22:37687  10.3.3.18:37687    50.50.1.21:37687   50.50.1.21:37687
 ```
 Видно что каждому VPC присваивается свой внешний IP.  
 ### Часть 5. Настройте для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.  
@@ -360,12 +360,36 @@ interface Ethernet0/0.12
  vrrp 12 ip 10.1.3.19
 end
 ```
+Настройка VRRP R12:  
 ```
-R12(config)#do sh run | sec dhcp
-ip dhcp excluded-address 10.1.3.1
-ip dhcp pool VPC1_client
- network 10.1.3.0 255.255.255.240
- default-router 10.1.3.1
+R12#sh run int e0/0.11
+Building configuration...
+
+Current configuration : 198 bytes
+!
+interface Ethernet0/0.11
+ encapsulation dot1Q 11
+ ip address 10.1.3.1 255.255.255.240
+ vrrp 11 ip 10.1.3.3
+ vrrp 11 priority 120
+ vrrp 11 track 1 decrement 100
+ vrrp 11 track 2 decrement 100
+end
+
+R12#sh run int e0/0.12
+Building configuration...
+
+Current configuration : 162 bytes
+!
+interface Ethernet0/0.12
+ encapsulation dot1Q 12
+ vrrp 12 ip 10.1.3.19
+ vrrp 12 priority 150
+ vrrp 12 track 1 decrement 100
+ vrrp 12 track 2 decrement 100
+end
+
+
 ```
 Далее настроим DНCP.  
 Настройка R12:  
