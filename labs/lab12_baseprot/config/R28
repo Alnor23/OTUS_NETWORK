@@ -1,9 +1,9 @@
 R28#sh run
 Building configuration...
 
-Current configuration : 3517 bytes
+Current configuration : 3518 bytes
 !
-! Last configuration change at 13:05:27 UTC Fri Sep 8 2023
+! Last configuration change at 21:38:19 UTC Sun Sep 10 2023
 !
 version 15.5
 service timestamps debug datetime msec
@@ -194,7 +194,7 @@ route-map PBR permit 20
  set ip next-hop verify-availability 50.50.1.21 1 track 2
 !
 route-map NAT2 permit 10
- match ip address 1
+ match ip address 3
  match interface Ethernet0/1
 !
 route-map NAT1 permit 10
