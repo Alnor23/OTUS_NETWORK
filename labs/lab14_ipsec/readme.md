@@ -103,6 +103,127 @@ R24    |e0/2  |IPv4          |10.10.2.13/30                 |10.10.2.12/30
 R24    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::24:2/64  |20FF:0DB8:ACAD:4014::/64
 R23    |e0/2  |IPv4          |10.10.2.14/30                 |10.10.2.12/30
 R23    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::23:2/64  |20FF:0DB8:ACAD:4014::/64  
+### Настройка CA и Peers
+Для выполнения данной лабораторной работы неообходимо настроить аутентификацию клиентов IPsec через сертификаты.  
+В роли СA будет выступать R24(выполним на нем необходимые настройки:  
+```
+R24(config)#ip domain name LAB.RU
+R24(config)#ip http server
+R24(config)#crypto key generate rsa general-keys label CA exportable modulus 2048
+R24(config)#crypto pki server CA
+R24(cs-server)#no shut
+```
+Далее настроим клиентов:  
+```
+R15(config)#crypto key generate rsa label VPN modulus 2048
+R15(config)#crypto pki trustpoint VPN
+R15(ca-trustpoint)#enrollment url http://10.10.1.3
+R15(ca-trustpoint)#subject-name CN=R15, OU=VPN, O=LAB, C=RU
+R15(ca-trustpoint)#rsakeypair VPN
+R15(ca-trustpoint)#revocation-check none
+```
+Затем настроим запрос сертификата CA и сгенерируем CSR и отправим его на подпись:  
+```
+R15(config)#crypto pki authenticate VPN
+Certificate has the following attributes:
+       Fingerprint MD5: 96A68334 770CB563 ED4F9AEC BFCBFF58
+      Fingerprint SHA1: B69E2104 B9593695 27AEE8FB 86D618C1 4B737913
 
-### Часть 1. Настройте GRE поверх IPSec между офисами Москва и С.-Петербург.  
+% Do you accept this certificate? [yes/no]: yes
+Trustpoint CA certificate accepted.
+R15(config)#crypto pki enroll
+R15(config)#crypto pki enroll VPN
+%
+% Start certificate enrollment ..
+% Create a challenge password. You will need to verbally provide this
+   password to the CA Administrator in order to revoke your certificate.
+   For security reasons your password will not be saved in the configuration.
+   Please make a note of it.
+
+Password:
+Re-enter password:
+
+% The subject name in the certificate will include: CN=R15, OU=VPN, O=LAB, C=RU
+% The subject name in the certificate will include: R15
+% Include the router serial number in the subject name? [yes/no]: n
+% Include an IP address in the subject name? [no]: y
+Enter Interface name or IP Address[]: 50.50.1.38
+Request certificate from CA? [yes/no]: y
+% Certificate request sent to Certificate Authority
+% The 'show crypto pki certificate verbose VPN' commandwill show the fingerprint
+```
+На CA мы подписываем CSR и выпускаем сертификат:  
+```
+R24#crypto pki server CA grant all
+```
+Посмотрим результат на клиенте:  
+```
+R15#sh crypto pki cer
+Certificate
+  Status: Available
+  Certificate Serial Number (hex): 02
+  Certificate Usage: General Purpose
+  Issuer:
+    cn=CA
+  Subject:
+    Name: R15
+    IP Address: 50.50.1.38
+    hostname=R15+ipaddress=50.50.1.38
+    cn=R15
+    ou=VPN
+    o=LAB
+    c=RU
+  Validity Date:
+    start date: 19:18:49 UTC Sep 27 2023
+    end   date: 19:18:49 UTC Sep 26 2024
+  Associated Trustpoints: VPN
+
+CA Certificate
+  Status: Available
+  Certificate Serial Number (hex): 01
+  Certificate Usage: Signature
+  Issuer:
+    cn=CA
+  Subject:
+    cn=CA
+  Validity Date:
+    start date: 18:15:37 UTC Sep 27 2023
+    end   date: 18:15:37 UTC Sep 26 2026
+  Associated Trustpoints: VPN
+```
+
+### Часть 1. Настройте GRE поверх IPSec между офисами Москва и С.-Петербург.    
+GRE между офисами был настроен в лабораторной ранее:  
+R15:  
+```
+R15#sh run int tunnel 1
+Building configuration...
+
+Current configuration : 171 bytes
+!
+interface Tunnel1
+ ip address 10.1.5.1 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source 50.50.1.38
+ tunnel destination 50.50.1.10
+end
+```
+R18:  
+```
+R18#sh run int tunnel 1
+Building configuration...
+
+Current configuration : 171 bytes
+!
+interface Tunnel1
+ ip address 10.1.5.2 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source 50.50.1.10
+ tunnel destination 50.50.1.38
+end
+```
 
