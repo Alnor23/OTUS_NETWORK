@@ -193,7 +193,7 @@ CA Certificate
 ```
 
 ### Часть 1. Настройте GRE поверх IPSec между офисами Москва и С.-Петербург.    
-GRE между офисами был настроен в лабораторной ранее:  
+GRE между офисами был настроен в предыдущей лабораторной работе:  
 R15:  
 ```
 R15#sh run int tunnel 1
@@ -226,4 +226,44 @@ interface Tunnel1
  tunnel destination 50.50.1.38
 end
 ```
+Перейдем к настройке IPsec и настроим первую фазу:  
+```
+R15#sh run | sec crypto ikev2
+crypto ikev2 proposal PH1
+ encryption aes-cbc-128
+ integrity md5
+ group 2
+crypto ikev2 policy IKEV2
+ proposal PH1
+crypto ikev2 profile PROF1
+ match address local 50.50.1.38
+ match identity remote address 50.50.1.10 255.255.255.255
+ authentication remote rsa-sig
+ authentication local rsa-sig
+ pki trustpoint VPN
+```
+Далее создадим ACL для отбора трафика:  
+```
+R15#sh access-list R15_to_R18
+Extended IP access list R15_to_R18
+    10 permit ip 10.1.0.0 0.0.255.255 10.2.0.0 0.0.255.255
+```
+Определим набор преобразований:  
+```
+R15#sh run | s crypto ipsec trans
+crypto ipsec transform-set IPSEC_TS esp-aes esp-md5-hmac
+ mode tunnel
+```
+И настроим вторую фазу:  
+```
+R15#sh run | s crypto map
+crypto map IPSEC 1 ipsec-isakmp
+ set peer 50.50.1.10
+ set transform-set IPSEC_TS
+ set pfs group5
+ set ikev2-profile PROF1
+ match address R15_to_R18
+```
+Настройки IPsec для R18 аналогичны.
+
 
