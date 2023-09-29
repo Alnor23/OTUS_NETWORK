@@ -242,17 +242,17 @@ crypto ikev2 profile PROF1
  authentication local rsa-sig
  pki trustpoint VPN
 ```
-Далее создадим ACL для отбора трафика:  
+Далее создадим ACL для отбора трафика идущему через GRE:  
 ```
-R15#sh access-list R15_to_R18
-Extended IP access list R15_to_R18
-    10 permit ip 10.1.0.0 0.0.255.255 10.2.0.0 0.0.255.255
+R15#sh access-lists GRE1
+Extended IP access list GRE1
+    10 permit gre any any
 ```
 Определим набор преобразований:  
 ```
 R15#sh run | s crypto ipsec trans
 crypto ipsec transform-set IPSEC_TS esp-aes esp-md5-hmac
- mode tunnel
+ mode transport
 ```
 И настроим вторую фазу:  
 ```
@@ -262,8 +262,68 @@ crypto map IPSEC 1 ipsec-isakmp
  set transform-set IPSEC_TS
  set pfs group5
  set ikev2-profile PROF1
- match address R15_to_R18
+ match address GRE1
 ```
-Настройки IPsec для R18 аналогичны.
+Далее применяем crypto map к исходящему интерфейсу:  
+```
+R15(config)#int e0/2
+R15(config-if)#cry
+R15(config-if)#crypto map IPSEC
+```
 
+Настройки IPsec для R18 аналогичны.  
+Выполним проверку:  
+```
+R15#sh crypto ipsec sa
 
+interface: Ethernet0/2
+    Crypto map tag: IPSEC, local addr 50.50.1.38
+
+   protected vrf: (none)
+   local  ident (addr/mask/prot/port): (0.0.0.0/0.0.0.0/47/0)
+   remote ident (addr/mask/prot/port): (0.0.0.0/0.0.0.0/47/0)
+   current_peer 50.50.1.10 port 500
+     PERMIT, flags={origin_is_acl,}
+    #pkts encaps: 233, #pkts encrypt: 233, #pkts digest: 233
+    #pkts decaps: 117, #pkts decrypt: 117, #pkts verify: 117
+    #pkts compressed: 0, #pkts decompressed: 0
+    #pkts not compressed: 0, #pkts compr. failed: 0
+    #pkts not decompressed: 0, #pkts decompress failed: 0
+    #send errors 0, #recv errors 0
+
+     local crypto endpt.: 50.50.1.38, remote crypto endpt.: 50.50.1.10
+     plaintext mtu 1438, path mtu 1500, ip mtu 1500, ip mtu idb Ethernet0/2
+     current outbound spi: 0x41DD788(69064584)
+     PFS (Y/N): N, DH group: none
+
+     inbound esp sas:
+      spi: 0x4A0C4498(1242317976)
+        transform: esp-aes esp-md5-hmac ,
+        in use settings ={Tunnel, }
+        conn id: 2, flow_id: SW:2, sibling_flags 80000040, crypto map: IPSEC
+        sa timing: remaining key lifetime (k/sec): (4303392/3255)
+        IV size: 16 bytes
+        replay detection support: Y
+        Status: ACTIVE(ACTIVE)
+
+     inbound ah sas:
+
+     inbound pcp sas:
+
+     outbound esp sas:
+      spi: 0x41DD788(69064584)
+        transform: esp-aes esp-md5-hmac ,
+        in use settings ={Tunnel, }
+        conn id: 1, flow_id: SW:1, sibling_flags 80000040, crypto map: IPSEC
+        sa timing: remaining key lifetime (k/sec): (4303382/3255)
+        IV size: 16 bytes
+        replay detection support: Y
+        Status: ACTIVE(ACTIVE)
+
+     outbound ah sas:
+
+     outbound pcp sas:
+```
+Из проверки видно что пакеты шифруются и расшифровываются.  
+
+### Часть 2. Настройте DMVPN поверх IPSec между Москва и Чокурдах, Лабытнанги.  
