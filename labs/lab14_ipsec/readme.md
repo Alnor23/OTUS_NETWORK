@@ -105,7 +105,7 @@ R23    |e0/2  |IPv4          |10.10.2.14/30                 |10.10.2.12/30
 R23    |e0/2  |IPv6          |20FF:0DB8:ACAD:4014::23:2/64  |20FF:0DB8:ACAD:4014::/64  
 ### Настройка CA и Peers
 Для выполнения данной лабораторной работы неообходимо настроить аутентификацию клиентов IPsec через сертификаты.  
-В роли СA будет выступать R24(выполним на нем необходимые настройки:  
+В роли СA будет выступать R24 (выполним на нем необходимые настройки):  
 ```
 R24(config)#ip domain name LAB.RU
 R24(config)#ip http server
@@ -131,7 +131,8 @@ Certificate has the following attributes:
 
 % Do you accept this certificate? [yes/no]: yes
 Trustpoint CA certificate accepted.
-R15(config)#crypto pki enroll
+```
+```
 R15(config)#crypto pki enroll VPN
 %
 % Start certificate enrollment ..
@@ -327,3 +328,105 @@ interface: Ethernet0/2
 Из проверки видно что пакеты шифруются и расшифровываются.  
 
 ### Часть 2. Настройте DMVPN поверх IPSec между Москва и Чокурдах, Лабытнанги.  
+В данном задании необходимо настроить IPSec между R14, R27 и R28.  
+DMVPN 1 фазы был настроен в предыдущей лабораторной работе:  
+R14(Москва) он будет выступать в роли хаба:  
+```
+R14#sh run int tun 1
+Building configuration...
+
+Current configuration : 184 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.2 255.255.255.0
+ no ip redirects
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 1
+ tunnel source 50.50.1.30
+ tunnel mode gre multipoint
+end
+```
+Затем настроим R27(Лабытнанги), R28(Чокурдах) в роли SPOKE:  
+R27:  
+```
+R27#sh run int tu 1
+Building configuration...
+
+Current configuration : 228 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.4 255.255.255.0
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ tunnel source 50.50.1.26
+ tunnel destination 50.50.1.30
+end
+```
+R28:  
+```
+R28#sh run int tu1
+Building configuration...
+
+Current configuration : 228 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.3 255.255.255.0
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ tunnel source 50.50.1.22
+ tunnel destination 50.50.1.30
+end
+```
+Настройка аутентификации клиентов IPsec через сертификаты выполняется по аналогии с предыдущей частью В роли СA будет выступать также R24:  
+Пример R14:  
+```
+R14#sh crypto pki trustpoint VPN
+Trustpoint VPN:
+    Subject Name:
+    cn=CA
+          Serial Number (hex): 01
+    Certificate configured.
+    SCEP URL: http://10.10.1.3:80/cgi-bin
+
+
+R14#sh crypto pki cer
+Certificate
+  Status: Available
+  Certificate Serial Number (hex): 06
+  Certificate Usage: General Purpose
+  Issuer:
+    cn=CA
+  Subject:
+    Name: R14
+    IP Address: 50.50.1.30
+    hostname=R14+ipaddress=50.50.1.30
+    cn=R14
+    ou=VPN
+    o=LAB
+    c=RU
+  Validity Date:
+    start date: 22:46:12 UTC Sep 29 2023
+    end   date: 22:46:12 UTC Sep 28 2024
+  Associated Trustpoints: VPN
+  Storage: nvram:CA#6.cer
+
+CA Certificate
+  Status: Available
+  Certificate Serial Number (hex): 01
+  Certificate Usage: Signature
+  Issuer:
+    cn=CA
+  Subject:
+    cn=CA
+  Validity Date:
+    start date: 18:15:37 UTC Sep 27 2023
+    end   date: 18:15:37 UTC Sep 26 2026
+  Associated Trustpoints: VPN
+  Storage: nvram:CA#1CA.cer
+```
+(Настройки на R27, R28 выполнены аналогично).  
+
