@@ -268,12 +268,27 @@ crypto map IPSEC 1 ipsec-isakmp
 Далее применяем crypto map к исходящему интерфейсу:  
 ```
 R15(config)#int e0/2
-R15(config-if)#cry
 R15(config-if)#crypto map IPSEC
 ```
 
 Настройки IPsec для R18 аналогичны.  
 Выполним проверку:  
+```
+R15#sho crypto ikev2 session
+ IPv4 Crypto IKEv2 Session
+
+Session-id:2, Status:UP-ACTIVE, IKE count:1, CHILD count:1
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status
+2         50.50.1.38/500        50.50.1.10/500        none/none            READY
+      Encr: AES-CBC, keysize: 128, PRF: MD5, Hash: MD596, DH Grp:2, Auth sign: RSA, Auth verify: RSA
+      Life/Active Time: 86400/679 sec
+Child sa: local selector  0.0.0.0/0 - 255.255.255.255/65535
+          remote selector 0.0.0.0/0 - 255.255.255.255/65535
+          ESP spi in/out: 0xA6FDEB3/0x25DA684
+
+ IPv6 Crypto IKEv2 Session
+```
 ```
 R15#sh crypto ipsec sa
 
@@ -325,7 +340,7 @@ interface: Ethernet0/2
 
      outbound pcp sas:
 ```
-Из проверки видно что пакеты шифруются и расшифровываются.  
+Из проверки видно что сессия установлена пакеты шифруются и расшифровываются.  
 
 ### Часть 2. Настройте DMVPN поверх IPSec между Москва и Чокурдах, Лабытнанги.  
 В данном задании необходимо настроить IPSec между R14, R27 и R28.  
@@ -430,4 +445,268 @@ CA Certificate
 ```
 (Настройки на R27, R28 выполнены аналогично).  
 
+Перейдем к настройке IPsec:
+Хаб R14:  
+```
+R14#sh run | sec crypto ikev2
+crypto ikev2 proposal PH1
+ encryption aes-cbc-128
+ integrity md5
+ group 2
+crypto ikev2 profile PROF1
+ match address local 50.50.1.30
+ match identity remote address 0.0.0.0 0.0.0.0
+ authentication remote rsa-sig
+ authentication local rsa-sig
+ pki trustpoint VPN
 
+R14#sh run | s crypto ipsec trans
+crypto ipsec transform-set IPSEC_TS esp-aes esp-md5-hmac
+ mode transport
+
+R28(config)#crypto ipsec profile IPSEC_P1
+R28(ipsec-profile)#set transform-set IPSEC_TS
+R14#sh crypto ipsec profile
+IPSEC profile IPSEC_P1
+        Security association lifetime: 4608000 kilobytes/3600 seconds
+        Responder-Only (Y/N): N
+        PFS (Y/N): N
+        Mixed-mode : Disabled
+        Transform sets={
+                IPSEC_TS:  { esp-aes esp-md5-hmac  } ,
+        }
+
+R14#sh run int tun1
+Building configuration...
+
+Current configuration : 246 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.2 255.255.255.0
+ no ip redirects
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 1
+ tunnel source 50.50.1.30
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile IPSEC_P1 ikev2-profile PROF1
+end
+
+```
+SPOKE R27:  
+```
+R27#sh run | sec crypto ikev2
+crypto ikev2 proposal PH1
+ encryption aes-cbc-128
+ integrity md5
+ group 2
+crypto ikev2 policy IKEV2
+ proposal PH1
+crypto ikev2 profile PROF1
+ match address local 50.50.1.26
+ match identity remote address 50.50.1.30 255.255.255.255
+ authentication remote rsa-sig
+ authentication local rsa-sig
+ pki trustpoint VPN
+
+R27#sh run | s crypto ipsec trans
+crypto ipsec transform-set IPSEC_TS esp-aes esp-md5-hmac
+ mode transport
+
+R28(config)#crypto ipsec profile IPSEC_P1
+R28(ipsec-profile)#set transform-set IPSEC_TS
+R27#sh crypto ipsec profile
+IPSEC profile IPSEC_P1
+        Security association lifetime: 4608000 kilobytes/3600 seconds
+        Responder-Only (Y/N): N
+        PFS (Y/N): N
+        Mixed-mode : Disabled
+        Transform sets={
+                IPSEC_TS:  { esp-aes esp-md5-hmac  } ,
+        }
+
+R27#sh run int tun1
+Building configuration...
+
+Current configuration : 290 bytes
+!
+interface Tunnel1
+ ip address 10.1.7.4 255.255.255.0
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ tunnel source 50.50.1.26
+ tunnel destination 50.50.1.30
+ tunnel protection ipsec profile IPSEC_P1 ikev2-profile PROF1
+end
+```
+SPOKE R28:  
+```
+R28#sh run | sec crypto ikev2
+crypto ikev2 proposal PH1
+ encryption aes-cbc-128
+ integrity md5
+ group 2
+crypto ikev2 policy IKEV2
+ proposal PH1
+crypto ikev2 profile PROF1
+ match address local 50.50.1.22
+ match identity remote address 50.50.1.30 255.255.255.255
+ authentication remote rsa-sig
+ authentication local rsa-sig
+ pki trustpoint VPN
+
+
+R28#sh run | s crypto ipsec trans
+crypto ipsec transform-set IPSEC_TS esp-aes esp-md5-hmac
+ mode transport
+
+R28(config)#crypto ipsec profile IPSEC_P1
+R28(ipsec-profile)#set transform-set IPSEC_TS
+R28#sh crypto ipsec profile
+IPSEC profile IPSEC_P1
+        Security association lifetime: 4608000 kilobytes/3600 seconds
+        Responder-Only (Y/N): N
+        PFS (Y/N): N
+        Mixed-mode : Disabled
+        Transform sets={
+                IPSEC_TS:  { esp-aes esp-md5-hmac  } ,
+        }
+
+interface Tunnel1
+ ip address 10.1.7.3 255.255.255.0
+ ip nhrp map multicast 50.50.1.30
+ ip nhrp map 50.50.1.30 10.1.7.2
+ ip nhrp network-id 1
+ ip nhrp nhs 10.1.7.2
+ tunnel source 50.50.1.22
+ tunnel destination 50.50.1.30
+ tunnel protection ipsec profile IPSEC_P1 ikev2-profile PROF1
+``` 
+В данной части в отличии от предыдущей применена настройка на тунельном интерфейсе, а не через route map к исходящему интерфейсу.  
+Выполним проверку на хабе R14:  
+```
+R14#sho crypto ikev2 session
+ IPv4 Crypto IKEv2 Session
+
+Session-id:4, Status:UP-ACTIVE, IKE count:1, CHILD count:1
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status
+2         50.50.1.30/500        50.50.1.22/500        none/none            READY
+      Encr: AES-CBC, keysize: 128, PRF: MD5, Hash: MD596, DH Grp:2, Auth sign: RSA, Auth verify: RSA
+      Life/Active Time: 86400/646 sec
+Child sa: local selector  50.50.1.30/0 - 50.50.1.30/65535
+          remote selector 50.50.1.22/0 - 50.50.1.22/65535
+          ESP spi in/out: 0x474CA551/0xF7DA871F
+
+Session-id:3, Status:UP-ACTIVE, IKE count:1, CHILD count:1
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status
+1         50.50.1.30/500        50.50.1.26/500        none/none            READY
+      Encr: AES-CBC, keysize: 128, PRF: MD5, Hash: MD596, DH Grp:2, Auth sign: RSA, Auth verify: RSA
+      Life/Active Time: 86400/1139 sec
+Child sa: local selector  50.50.1.30/0 - 50.50.1.30/65535
+          remote selector 50.50.1.26/0 - 50.50.1.26/65535
+          ESP spi in/out: 0x9448171E/0xBF37498B
+
+ IPv6 Crypto IKEv2 Session
+```
+```
+R14#sh crypto ipsec sa
+
+interface: Tunnel1
+    Crypto map tag: Tunnel1-head-0, local addr 50.50.1.30
+
+   protected vrf: (none)
+   local  ident (addr/mask/prot/port): (50.50.1.30/255.255.255.255/47/0)
+   remote ident (addr/mask/prot/port): (50.50.1.22/255.255.255.255/47/0)
+   current_peer 50.50.1.22 port 500
+     PERMIT, flags={origin_is_acl,}
+    #pkts encaps: 1, #pkts encrypt: 1, #pkts digest: 1
+    #pkts decaps: 1, #pkts decrypt: 1, #pkts verify: 1
+    #pkts compressed: 0, #pkts decompressed: 0
+    #pkts not compressed: 0, #pkts compr. failed: 0
+    #pkts not decompressed: 0, #pkts decompress failed: 0
+    #send errors 0, #recv errors 0
+
+     local crypto endpt.: 50.50.1.30, remote crypto endpt.: 50.50.1.22
+     plaintext mtu 1458, path mtu 1500, ip mtu 1500, ip mtu idb (none)
+     current outbound spi: 0xF7DA871F(4158293791)
+     PFS (Y/N): N, DH group: none
+
+     inbound esp sas:
+      spi: 0x474CA551(1196205393)
+        transform: esp-aes esp-md5-hmac ,
+        in use settings ={Transport, }
+        conn id: 7, flow_id: SW:7, sibling_flags 80000000, crypto map: Tunnel1-head-0
+        sa timing: remaining key lifetime (k/sec): (4350560/2815)
+        IV size: 16 bytes
+        replay detection support: Y
+        Status: ACTIVE(ACTIVE)
+
+     inbound ah sas:
+
+     inbound pcp sas:
+
+     outbound esp sas:
+      spi: 0xF7DA871F(4158293791)
+        transform: esp-aes esp-md5-hmac ,
+        in use settings ={Transport, }
+        conn id: 8, flow_id: SW:8, sibling_flags 80000000, crypto map: Tunnel1-head-0
+        sa timing: remaining key lifetime (k/sec): (4350560/2815)
+        IV size: 16 bytes
+        replay detection support: Y
+        Status: ACTIVE(ACTIVE)
+
+     outbound ah sas:
+
+     outbound pcp sas:
+
+   protected vrf: (none)
+   local  ident (addr/mask/prot/port): (50.50.1.30/255.255.255.255/47/0)
+   remote ident (addr/mask/prot/port): (50.50.1.26/255.255.255.255/47/0)
+   current_peer 50.50.1.26 port 500
+     PERMIT, flags={origin_is_acl,}
+    #pkts encaps: 1, #pkts encrypt: 1, #pkts digest: 1
+    #pkts decaps: 1, #pkts decrypt: 1, #pkts verify: 1
+    #pkts compressed: 0, #pkts decompressed: 0
+    #pkts not compressed: 0, #pkts compr. failed: 0
+    #pkts not decompressed: 0, #pkts decompress failed: 0
+    #send errors 0, #recv errors 0
+
+     local crypto endpt.: 50.50.1.30, remote crypto endpt.: 50.50.1.26
+     plaintext mtu 1458, path mtu 1500, ip mtu 1500, ip mtu idb (none)
+     current outbound spi: 0xBF37498B(3208071563)
+     PFS (Y/N): N, DH group: none
+
+     inbound esp sas:
+      spi: 0x9448171E(2487752478)
+        transform: esp-aes esp-md5-hmac ,
+        in use settings ={Transport, }
+        conn id: 5, flow_id: SW:5, sibling_flags 80000000, crypto map: Tunnel1-head-0
+        sa timing: remaining key lifetime (k/sec): (4151378/2322)
+        IV size: 16 bytes
+        replay detection support: Y
+        Status: ACTIVE(ACTIVE)
+
+     inbound ah sas:
+
+     inbound pcp sas:
+
+     outbound esp sas:
+      spi: 0xBF37498B(3208071563)
+        transform: esp-aes esp-md5-hmac ,
+        in use settings ={Transport, }
+        conn id: 6, flow_id: SW:6, sibling_flags 80000000, crypto map: Tunnel1-head-0
+        sa timing: remaining key lifetime (k/sec): (4151377/2322)
+        IV size: 16 bytes
+        replay detection support: Y
+        Status: ACTIVE(ACTIVE)
+
+     outbound ah sas:
+
+     outbound pcp sas
+```
+Из проверки видно что сессия установлена пакеты шифруются и расшифровываются.   
+_______
+ - [Конфигурации устройств](https://github.com/Alnor23/OTUS_NETWORK/tree/main/labs/lab14_ipsec/config)
