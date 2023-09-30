@@ -379,7 +379,7 @@ interface Tunnel1
  tunnel destination 50.50.1.30
 end
 ```
-R28:  
+R28:   
 ```
 R28#sh run int tu1
 Building configuration...
@@ -445,7 +445,7 @@ CA Certificate
 ```
 (Настройки на R27, R28 выполнены аналогично).  
 
-Перейдем к настройке IPsec:
+Перейдем к настройке IPsec:  
 Хаб R14:  
 ```
 R14#sh run | sec crypto ikev2
