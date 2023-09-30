@@ -1,0 +1,299 @@
+R18#sh run
+Building configuration...
+
+Current configuration : 7938 bytes
+!
+version 15.5
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R18
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+!
+!
+!
+bsd-client server url https://cloudsso.cisco.com/as/token.oauth2
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip domain name LAB.RU
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+cts logging verbose
+!
+crypto pki trustpoint VPN
+ enrollment url http://50.50.1.9:80
+ ip-address 50.50.1.10
+ subject-name CN=R18, OU=VPN, O=LAB, C=RU
+ revocation-check none
+ rsakeypair VPN
+!
+!
+crypto pki certificate chain VPN
+ certificate 03
+  30820342 3082022A A0030201 02020103 300D0609 2A864886 F70D0101 05050030
+  0D310B30 09060355 04031302 4341301E 170D3233 30393237 32323134 31395A17
+  0D323430 39323632 32313431 395A306B 310B3009 06035504 06130252 55310C30
+  0A060355 040A1303 4C414231 0C300A06 0355040B 13035650 4E310C30 0A060355
+  04031303 52313831 32301706 092A8648 86F70D01 0902160A 5231382E 4C41422E
+  52553017 06092A86 4886F70D 01090813 0A35302E 35302E31 2E313030 82012230
+  0D06092A 864886F7 0D010101 05000382 010F0030 82010A02 82010100 994B7051
+  5752C9FF 6BD18B75 73D6D8AE 3398B730 5FBEB549 943EEDF5 422AF46B A3F1F3B9
+  19CD5314 3B7FEEBC 8CB20578 C929D049 2609C6D3 13653475 EEFFAF89 1DB7ADEC
+  1BE5CD72 9EDF867E 9BA49BC8 A61C3F1F A97C7BCE 920DB8B1 F80B38C9 EEFD419F
+  9E54F1DC 8472E047 40BEB957 BFC7A168 0E327162 3C257EB2 DBA16467 1F077628
+  E0A0A150 DDADFF65 24C4A485 73503BBD 9F07081B 13C7E596 93F2FF9B 7B6CEEE7
+  DF670D0D 83927570 18338586 1C6004D2 33E8FE00 D7FE97F2 98638697 2C209B3B
+  13068CA6 65724931 BC1FA029 73A596B7 6F147073 3FE6A5ED 5FB4FDE9 502F0083
+  C726421B 65065301 F9C6A15F 91D521BC 714D51AC 925DA73E 76096AFF 02030100
+  01A34F30 4D300B06 03551D0F 04040302 05A0301F 0603551D 23041830 1680145F
+  F848182C DCC1D804 BF94547E DA47472F 96E49B30 1D060355 1D0E0416 0414A319
+  03B70984 B6B51D1C 53168E66 20CB6601 BD41300D 06092A86 4886F70D 01010505
+  00038201 010046B7 B05390C2 2701E9AC 03E4A15D D7419F13 E3D91756 E7C60FF3
+  7DB22BEA 59B80714 15D17DA7 727487A7 CD87867C DDA691BC EE7FAFCF B8035BC3
+  1D14C160 E475245F B7AD9AF1 36204567 CE60C026 A37BAEC1 C022AFF4 329D4F2C
+  D1655B0A C1AB23F6 287D4D8B AF13043F 083D8D9F BAB8E28C 69A1D3B2 548CA8D4
+  E7825C3C 85D82D42 4DA7F57B 8A1875F2 05AA1469 10C6C2B3 25A68BDF CE472743
+  949BC22F 3A9D4561 F860561E 7C6D2FBA 42055F43 6AB143F0 002BA402 C8A8A30B
+  C75B8669 BA76CCD1 E2F8C0EF 31DBB21C 237E16F8 6A005576 96DA6CB9 9C1A45F0
+  524343A2 BE76C188 0B16EA1C 8D7D1BA6 E4952BD0 FE11C5CF 40642E6F D23FF62E
+  34E33D18 24DD
+        quit
+ certificate ca 01
+  308202F8 308201E0 A0030201 02020101 300D0609 2A864886 F70D0101 04050030
+  0D310B30 09060355 04031302 4341301E 170D3233 30393237 31383135 33375A17
+  0D323630 39323631 38313533 375A300D 310B3009 06035504 03130243 41308201
+  22300D06 092A8648 86F70D01 01010500 0382010F 00308201 0A028201 0100C390
+  BB1EC43C AA71360F BBC2B7A7 9AAB3715 B8C5D276 618C90EF F8445145 EB87428C
+  5F54D84D 9737B131 F75A7D94 0B31BC71 20C223DC 450B2658 B5CE83B8 6A0286AF
+  8D0B0D61 6C504A02 77A3CB73 B5F7B3F5 37273748 231361B0 CAECA9C6 FD6DD845
+  21D151BC D99A63AA 13E3F0CA 3878C316 76C4EA4F F31215E6 3882AA07 1B3201E2
+  8F04B87B BCFB9C8F 6CC9CBA2 0250355E 4062032E 135314D2 2276D91B E2E58B30
+  640461CA 2FD16458 48A9AAED D93C0195 2A2132E5 E6C1A68A 0AB08BB9 CE4E711E
+  5A2908BD CC50B915 4309E067 C6BB8F1C 66019DB3 15B4BEEC 2F80314F 7315593B
+  03AA1808 FC9B7759 8BEF676D 735A2E91 3E7C511F A97FDE01 51415CE4 2B510203
+  010001A3 63306130 0F060355 1D130101 FF040530 030101FF 300E0603 551D0F01
+  01FF0404 03020186 301F0603 551D2304 18301680 145FF848 182CDCC1 D804BF94
+  547EDA47 472F96E4 9B301D06 03551D0E 04160414 5FF84818 2CDCC1D8 04BF9454
+  7EDA4747 2F96E49B 300D0609 2A864886 F70D0101 04050003 82010100 3B9F882D
+  9037E62A 2AF23284 D4273E94 DB57F89A 5DAE02CF 713FDB9D 61012A47 0AE32159
+  7ECA3EB2 E331DAED 7ADB3A88 6ED383F7 7F20C779 54ED9B10 4A485E2F 154380C8
+  6AF9A83B B433BAD5 C64A9CD4 90406C83 C65D6497 49A8E771 8FD3394C 70D2C43A
+  3F05B43E 953409C5 E6737927 C424327E DD670A85 EBC20300 89F679F2 6035B2A1
+  17302436 9CB63DA6 33CCA8E0 E6FDF287 1BFCF039 2FC48FB7 51E9C6BE EA7A59AE
+  CAE44447 C60B51A1 58472695 20E21B49 BD1F19DC A065FC4B 203994A4 75649B32
+  D6308D21 69ED8EAD EC179AFA F7CECA1A A50B1F66 164C4565 CE16B804 2A8332DA
+  E31B355D 7DEFD97F 8513B18D FD48ED3D 4E1C9310 2C123E10 29992A5F
+        quit
+!
+redundancy
+!
+!
+!
+!
+crypto ikev2 proposal PH1
+ encryption aes-cbc-128
+ integrity md5
+ group 2
+!
+crypto ikev2 policy IKEV2
+ proposal PH1
+!
+!
+crypto ikev2 profile PROF1
+ match address local 50.50.1.10
+ match identity remote address 50.50.1.38 255.255.255.255
+ authentication remote rsa-sig
+ authentication local rsa-sig
+ pki trustpoint VPN
+!
+!
+!
+crypto ipsec transform-set IPSEC_TS esp-aes esp-md5-hmac
+ mode transport
+!
+!
+!
+crypto map IPSEC 1 ipsec-isakmp
+ set peer 50.50.1.38
+ set transform-set IPSEC_TS
+ set pfs group5
+ set ikev2-profile PROF1
+ match address GRE1
+!
+!
+!
+!
+!
+interface Loopback1
+ description manage
+ ip address 10.2.1.2 255.255.255.255
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:2001::18/64
+ ipv6 enable
+!
+interface Tunnel1
+ ip address 10.1.5.2 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 3 3
+ tunnel source 50.50.1.10
+ tunnel destination 50.50.1.38
+!
+interface Ethernet0/0
+ description to R16
+ ip address 10.2.2.5 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:2012::18:0/64
+ ipv6 enable
+!
+interface Ethernet0/1
+ description to R17
+ ip address 10.2.2.2 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly in
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:2011::18:1/64
+ ipv6 enable
+!
+interface Ethernet0/2
+ description to R24
+ ip address 50.50.1.10 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly in
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:7003::18:2/64
+ ipv6 enable
+ crypto map IPSEC
+!
+interface Ethernet0/3
+ description to R26
+ ip address 50.50.1.14 255.255.255.252
+ ipv6 address FE80::18 link-local
+ ipv6 address 20FF:DB8:ACAD:7004::18:3/64
+ ipv6 enable
+!
+!
+router eigrp SPB
+ !
+ address-family ipv4 unicast autonomous-system 1
+  !
+  topology base
+   redistribute static
+  exit-af-topology
+  network 10.2.0.0 0.0.255.255
+  eigrp router-id 1.1.1.1
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 1
+  !
+  af-interface Ethernet0/2
+   passive-interface
+  exit-af-interface
+  !
+  af-interface Ethernet0/3
+   passive-interface
+  exit-af-interface
+  !
+  topology base
+   redistribute static
+  exit-af-topology
+  eigrp router-id 1.1.1.1
+ exit-address-family
+!
+router bgp 2042
+ bgp router-id 10.2.1.2
+ bgp log-neighbor-changes
+ bgp bestpath as-path multipath-relax
+ network 10.2.1.0 mask 255.255.255.240
+ network 10.2.1.2 mask 255.255.255.255
+ network 10.2.1.16 mask 255.255.255.248
+ network 10.2.3.0 mask 255.255.255.240
+ network 10.2.3.16 mask 255.255.255.240
+ network 50.50.1.12 mask 255.255.255.252
+ neighbor 50.50.1.9 remote-as 520
+ neighbor 50.50.1.9 route-map NOTRANSAS out
+ neighbor 50.50.1.13 remote-as 520
+ neighbor 50.50.1.13 route-map NOTRANSAS out
+ maximum-paths 2
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip nat pool pool1 50.50.1.81 50.50.1.85 netmask 255.255.255.248
+ip nat inside source list 1 pool pool1 overload
+ip route 0.0.0.0 0.0.0.0 50.50.1.9
+ip route 10.1.0.0 255.255.0.0 10.1.5.1
+!
+ip access-list extended GRE1
+ permit gre any any
+!
+!
+ip prefix-list 1 seq 5 permit 10.2.0.0/16 ge 17
+ipv6 route ::/0 20FF:DB8:ACAD:7003::24:3
+!
+route-map NOTRANSAS permit 10
+ match ip address prefix-list 1
+!
+!
+access-list 1 permit 10.2.0.0 0.0.255.255
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input none
+!
+!
+end
